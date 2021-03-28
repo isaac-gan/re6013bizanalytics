@@ -6,10 +6,10 @@ When you save the notebook, an HTML file containing the code and output will be 
 
 Home Loan Data Set - Loan Status as label
 
+
 ```{r}
 library(data.table)
 library(ggplot2)
-setwd("C:\\Users\\isaac\\OneDrive\\Desktop\\re6013bizanalytics")
 home.dt <- fread("home_train.csv")
 #class(home.dt)
 summary(home.dt)
@@ -122,8 +122,5 @@ which.max(density(home2.dt$ApplicantIncome)$y)
 density(home2.dt$ApplicantIncome)$x[29]
 cor(home2.dt$CoapplicantIncome,home2.dt$ApplicantIncome)
 summary(home2.dt)
-```
-```{r}
-
 ```
 

@@ -1,0 +1,143 @@
+---
+title: "RE6013 Business Analytics"
+output: html_notebook
+---
+
+# Loading Data and Imports
+
+Get imports
+```{r}
+library(data.table)
+library(ggplot2)
+library(corrplot)
+```
+
+Load data
+```{r}
+home.train.dt <- fread("home_train.csv")
+home.test.dt <- fread("home_test.csv")
+```
+
+# Data Exploration
+
+Create exploration copy
+```{r}
+home.exp <- copy(home.train.dt)
+```
+
+Basic data check reveal the following continous columns:
+  - Continuous
+    - ApplicantIncome
+    - CoApplicantIncome
+    - LoanAmount
+    - Loan_Amount_Term
+    
+Credit_History is actually categorical
+```{r}
+summary(home.exp) #13 columns in pattern, including 1 label column
+```
+
+Preview of the values reveal tha Loan_Status is the label column, Categorical and labelled with 'Y' and 'N'
+```{r}
+head(home.exp)
+```
+
+Check distribution of non-continuous variables
+
+We can see missing values in the following non-continuous columns:
+- Gender: missing is ""
+- Married: missing is ""
+- Dependents: missing is ""
+- Self_Employed: missing is ""
+- Credit_History: missing is NA
+```{r}
+ggplot(home.exp, aes(Gender)) + geom_histogram(stat="count")
+ggplot(home.exp, aes(Married)) + geom_histogram(stat="count")
+ggplot(home.exp, aes(Dependents)) + geom_histogram(stat="count")
+ggplot(home.exp, aes(Education)) + geom_histogram(stat="count")
+ggplot(home.exp, aes(Self_Employed)) + geom_histogram(stat="count")
+ggplot(home.exp, aes(Property_Area)) + geom_histogram(stat="count")
+ggplot(home.exp, aes(Loan_Status)) + geom_histogram(stat="count")
+ggplot(home.exp, aes(Credit_History)) + geom_histogram(stat="count")
+```
+Non-continuous variables missing counts
+```{r}
+home.exp[Gender == "", .N]
+home.exp[Married == "", .N]
+home.exp[Dependents == "", .N]
+home.exp[Self_Employed == "", .N]
+home.exp[is.na(Credit_History), .N]
+```
+Continuous variables missing counts
+```{r}
+home.exp[is.na(ApplicantIncome), .N]
+home.exp[is.na(CoapplicantIncome), .N]
+home.exp[is.na(LoanAmount), .N]
+home.exp[is.na(Loan_Amount_Term), .N]
+```
+# Filling missing data
+
+The missing data maybe filled in the following ways:
+- Gender, Dependents, Self_Employed, Credit_History: use mode to impute
+- Married: small enough to try profiling and using mode
+- LoanAmount and Loan_Amount_Term: may need to discard since it is what we are predicting
+
+```{r}
+# get mode function definition
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+```
+
+Create duplicate
+```{r}
+home <- copy(home.exp)
+```
+
+Impute with mode for Gender and Dependents column
+```{r}
+#get modes
+gender.mode <- getmode(home.exp$Gender)
+dependents.mode <- getmode(home.exp$Dependents)
+self_employed.mode <- getmode(home.exp$Self_Employed)
+credit_history.mode <- getmode(home.exp$Credit_History)
+
+#impute with modes
+home[Gender=="", Gender:=gender.mode]
+home[Dependents=="", Dependents:=dependents.mode]
+home[Self_Employed=="", Self_Employed:=self_employed.mode]
+home[Credit_History=="", Credit_History:=credit_history.mode]
+
+#verify
+levels(factor(home$Gender))
+levels(factor(home$Dependents))
+levels(factor(home$Self_Employed))
+levels(factor(home$Credit_History))
+```
+
+Perform some profiling on the 3 missing married patterns
+Use Dependents and CoapplicantIncome
+```{r}
+# view the 3 with married missing
+home[Married==""]
+
+# get modes
+LP001357.married.mode = getmode(home[Dependents == 0 & CoapplicantIncome > 0]$Married)
+LP001760.LP002393.married.mode = getmode(home[Dependents == 0 & CoapplicantIncome == 0]$Married)
+
+# impute with modes
+home[Loan_ID=="LP001357", Married:=LP001357.married.mode]
+home[Loan_ID=="LP001760" | Loan_ID=="LP002393", Married:=LP001760.LP002393.married.mode]
+
+# verify
+home[Loan_ID=="LP001357" | Loan_ID=="LP001760" | Loan_ID=="LP002393"]
+```
+View distributions
+- outliers skew data, must remove outliers for better plots
+```{r}
+ggplot(home, aes(ApplicantIncome)) + geom_boxplot()
+ggplot(home, aes(CoapplicantIncome)) + geom_boxplot()
+ggplot(home, aes(LoanAmount)) + geom_boxplot()
+ggplot(home, aes(Loan_Amount_Term)) + geom_boxplot()
+```
