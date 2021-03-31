@@ -10,6 +10,7 @@ Get imports
 library(data.table)
 library(ggplot2)
 library(corrplot)
+library(DMwR2)
 ```
 
 Load data
@@ -75,7 +76,7 @@ home.exp[is.na(CoapplicantIncome), .N]
 home.exp[is.na(LoanAmount), .N]
 home.exp[is.na(Loan_Amount_Term), .N]
 ```
-# Filling missing data
+# Filling missing categorical data
 
 The missing data maybe filled in the following ways:
 - Gender, Dependents, Self_Employed, Credit_History: use mode to impute
@@ -101,13 +102,12 @@ Impute with mode for Gender and Dependents column
 gender.mode <- getmode(home.exp$Gender)
 dependents.mode <- getmode(home.exp$Dependents)
 self_employed.mode <- getmode(home.exp$Self_Employed)
-credit_history.mode <- getmode(home.exp$Credit_History)
 
 #impute with modes
 home[Gender=="", Gender:=gender.mode]
 home[Dependents=="", Dependents:=dependents.mode]
 home[Self_Employed=="", Self_Employed:=self_employed.mode]
-home[Credit_History=="", Credit_History:=credit_history.mode]
+home[is.na(Credit_History), Credit_History:=0] #reasonable to assume missing is none
 
 #verify
 levels(factor(home$Gender))
@@ -133,11 +133,177 @@ home[Loan_ID=="LP001760" | Loan_ID=="LP002393", Married:=LP001760.LP002393.marri
 # verify
 home[Loan_ID=="LP001357" | Loan_ID=="LP001760" | Loan_ID=="LP002393"]
 ```
-View distributions
-- outliers skew data, must remove outliers for better plots
+```{r}
+summary(home) #verify
+```
+
+# View distributions on filled data
+
+It can be seen that the continuous variables have a small interquartile range in comparison to outliers - hard to see any distribution
 ```{r}
 ggplot(home, aes(ApplicantIncome)) + geom_boxplot()
 ggplot(home, aes(CoapplicantIncome)) + geom_boxplot()
-ggplot(home, aes(LoanAmount)) + geom_boxplot()
-ggplot(home, aes(Loan_Amount_Term)) + geom_boxplot()
+ggplot(home[!is.na(LoanAmount)], aes(LoanAmount)) + geom_boxplot()
+ggplot(home[!is.na(Loan_Amount_Term)], aes(Loan_Amount_Term)) + geom_boxplot()
+```
+View distributions in their raw state
+- Notice that Loan_Amount_Term is overwhelmingly 360 days (1 year)
+```{r}
+ggplot(home, aes(ApplicantIncome)) + geom_histogram()
+ggplot(home, aes(CoapplicantIncome)) + geom_histogram()
+ggplot(home[!is.na(LoanAmount)], aes(LoanAmount)) + geom_histogram()
+ggplot(home[!is.na(Loan_Amount_Term)], aes(Loan_Amount_Term)) + geom_histogram()
+```
+
+View distribution of...
+- Applicantincome, Coapplicantincome and LoanAmount without outliers
+- LoanAmountTerm for non-360
+```{r}
+# grab range for non-outliers
+ai.q <- quantile(home$ApplicantIncome, probs = c(.25, .75), na.rm = FALSE)
+ai.iqr <- IQR(home$ApplicantIncome)
+cai.q <- quantile(home$CoapplicantIncome, probs = c(.25, .75), na.rm = FALSE)
+cai.iqr <- IQR(home$CoapplicantIncome)
+la.q <- quantile(home[!is.na(LoanAmount)]$LoanAmount, probs = c(.25, .75), na.rm = FALSE)
+la.iqr <- IQR(home[!is.na(LoanAmount)]$LoanAmount)
+
+# plot
+ggplot(home[ApplicantIncome > ai.q[1]-1.5*ai.iqr & ApplicantIncome < ai.q[2]+1.5*ai.iqr], aes(ApplicantIncome)) + geom_histogram(binwidth = 50)
+ggplot(home[CoapplicantIncome > cai.q[1]-1.5*cai.iqr & CoapplicantIncome <= cai.q[2]+1.5*cai.iqr], aes(CoapplicantIncome)) + geom_histogram(binwidth = 50)
+ggplot(home[!is.na(LoanAmount) & LoanAmount > la.q[1]-1.5*la.iqr & LoanAmount < la.q[2]-1.5*la.iqr], aes(LoanAmount)) + geom_histogram(binwidth = 1)
+ggplot(home[!is.na(Loan_Amount_Term) & Loan_Amount_Term != 360], aes(Loan_Amount_Term)) + geom_histogram(binwidth = 10)
+```
+Since there is large amount of people with 0 Coapplicant, see distribution of non-zero, barring outliers
+```{r}
+ggplot(home[CoapplicantIncome > cai.q[1]-1.5*cai.iqr & CoapplicantIncome <= cai.q[2]+1.5*cai.iqr & CoapplicantIncome != 0], aes(CoapplicantIncome)) + geom_histogram(binwidth = 50)
+```
+# Data cleaning for Loan Amount to give
+Find correlations for approved loans
+- LoanAmount and ApplicantIncome seem to have a somewhat positive correlation
+```{r}
+corr.matrix <- cor(home[Loan_Status=="Y",c('ApplicantIncome','CoapplicantIncome','LoanAmount','Loan_Amount_Term')], use='complete.obs')
+corrplot(corr.matrix, method="color",addCoef.col = "black",tl.col = "black")
+```
+Try looking at scatter plot
+- it appears that the correlation may only be present because of outliers
+```{r}
+ggplot(home[Loan_Status=="Y"], aes(x=ApplicantIncome, y=LoanAmount)) + geom_point()
+```
+Try scatterplot and correlation without outliers
+- correlation becomes less strong but still visible
+```{r}
+corr.matrix <- cor(home[Loan_Status=="Y" & ApplicantIncome < 20000,c('ApplicantIncome', 'LoanAmount')], use='complete.obs')
+corrplot(corr.matrix, method="color",addCoef.col = "black",tl.col = "black")
+ggplot(home[Loan_Status=="Y" & ApplicantIncome < 20000], aes(x=ApplicantIncome, y=LoanAmount)) + geom_point()
+```
+
+## Feature Engineering
+Maybe create new features?
+- impute missing values
+- combined income
+- LoanAmount / LoanAmountTerm * 30 to compare with income
+```{r}
+# copy
+home.loan <- copy(home[Loan_Status=="Y"])
+
+# impute rows with missing loan information using mean
+loanamount.mean <- as.integer(mean(home.loan$LoanAmount, na.rm = TRUE))
+loanamountterm.mean <- as.integer(mean(home.loan$Loan_Amount_Term, na.rm=TRUE))
+home.loan[is.na(LoanAmount), LoanAmount:=loanamount.mean]
+home.loan[is.na(Loan_Amount_Term), Loan_Amount_Term:=loanamountterm.mean]
+
+# verify imputation
+sum(is.na(home.loan$LoanAmount))
+sum(is.na(home.loan$Loan_Amount_Term))
+
+# combine income
+home.loan[,Income:=as.integer(ApplicantIncome+CoapplicantIncome)]
+# create new loan amount
+home.loan[,LoanMonthly:=LoanAmount/Loan_Amount_Term*30]
+
+# verify
+head(home.loan)
+```
+Check new correlations
+- random outlier (Loanmonthly > 250) is skewing correlations (should remove in cleaning)
+```{r}
+corr.matrix <- cor(home.loan[,c('Income', 'LoanMonthly')], use='complete.obs')
+corrplot(corr.matrix, method="color",addCoef.col = "black",tl.col = "black")
+ggplot(home.loan, aes(x=Income, y=LoanMonthly)) + geom_point()
+```
+Find correlations without outlier
+- much stronger and better
+```{r}
+corr.matrix <- cor(home.loan[LoanMonthly<250,c('Income', 'LoanMonthly', 'LoanAmount', 'Loan_Amount_Term')], use='complete.obs')
+corrplot(corr.matrix, method="color",addCoef.col = "black",tl.col = "black")
+ggplot(home.loan[LoanMonthly<250], aes(x=Income, y=LoanMonthly)) + geom_point()
+```
+See distribution wihtout outlier
+```{r}
+ggplot(home.loan[LoanMonthly<250], aes(LoanMonthly)) + geom_histogram(binwidth = 5)
+mean(home.loan$LoanMonthly)
+```
+Remove outlier
+```{r}
+home.loan.no.outlier <- home.loan[LoanMonthly < 250]
+ggplot(home.loan.no.outlier, aes(x=Income, y=LoanMonthly)) + geom_point()
+```
+Factor the categorical columns
+```{r}
+cols <- c("Gender", "Married", "Dependents", "Education", "Self_Employed", "Property_Area", "Loan_Status")
+home.loan.no.outlier[,cols] <- lapply(home.loan.no.outlier[,cols, with=FALSE], factor)
+```
+
+```{r}
+summary(home.loan.no.outlier)
+```
+
+Save file
+```{r}
+fwrite(home.loan.no.outlier, file="home_loan_structure_prediction.csv")
+```
+
+# Data cleaning for Loan Eligibility
+Perform imputation + feature engineering
+```{r}
+# copy
+home.eligibility <- copy(home)
+
+# impute rows with missing loan information using mean
+loanamount.mean <- as.integer(mean(home.eligibility$LoanAmount, na.rm = TRUE))
+loanamountterm.mean <- as.integer(mean(home.eligibility$Loan_Amount_Term, na.rm=TRUE))
+home.eligibility[is.na(LoanAmount), LoanAmount:=loanamount.mean]
+home.eligibility[is.na(Loan_Amount_Term), Loan_Amount_Term:=loanamountterm.mean]
+
+# feature engineering (create LoanMonthly and Income columns)
+loanamount.mean <- as.integer(mean(home.eligibility$LoanAmount, na.rm = TRUE))
+loanamountterm.mean <- as.integer(mean(home.eligibility$Loan_Amount_Term, na.rm=TRUE))
+home.eligibility[is.na(LoanAmount), LoanAmount:=loanamount.mean]
+home.eligibility[is.na(Loan_Amount_Term), Loan_Amount_Term:=loanamountterm.mean]
+
+# combine income
+home.eligibility[,Income:=as.integer(ApplicantIncome+CoapplicantIncome)]
+# create new loan amount
+home.eligibility[,LoanMonthly:=LoanAmount/Loan_Amount_Term*30]
+```
+
+Factor Categorical columns
+```{r}
+cols <- c("Gender", "Married", "Dependents", "Education", "Self_Employed", "Property_Area", "Loan_Status")
+home.eligibility[,cols] <- lapply(home.eligibility[,cols, with=FALSE], factor)
+```
+
+Data exploration revealed nearly 2:1 Y vs N, need to balance dataset
+```{r}
+# undersampling to balance the Y and N
+home.eligibility[Loan_Status=="N",.N]
+yes.id <- sample(home.eligibility[Loan_Status=="Y"]$Loan_ID, size=192)
+home.eligibility.balanced <- home.eligibility[Loan_ID %in% yes.id | Loan_Status=="N"]
+
+#verify
+summary(home.eligibility.balanced)
+```
+Save file
+```{r}
+fwrite(home.eligibility.balanced, file="home_eligibility_prediction.csv")
 ```
