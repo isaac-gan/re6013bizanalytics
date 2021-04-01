@@ -1,5 +1,5 @@
 ---
-title: "RE6013 Business Analytics"
+title: "RE6013 Business Analytics EDA and Cleaning"
 output: html_notebook
 ---
 
@@ -250,7 +250,7 @@ ggplot(home.loan.no.outlier, aes(x=Income, y=LoanMonthly)) + geom_point()
 ```
 Factor the categorical columns
 ```{r}
-cols <- c("Gender", "Married", "Dependents", "Education", "Self_Employed", "Property_Area", "Loan_Status")
+cols <- c("Gender", "Married", "Dependents", "Education", "Self_Employed", "Property_Area", "Loan_Status", "Credit_History")
 home.loan.no.outlier[,cols] <- lapply(home.loan.no.outlier[,cols, with=FALSE], factor)
 ```
 
@@ -260,7 +260,7 @@ summary(home.loan.no.outlier)
 
 Save file
 ```{r}
-fwrite(home.loan.no.outlier, file="home_loan_structure_prediction.csv")
+# fwrite(home.loan.no.outlier, file="home_loan_structure_prediction.csv")
 ```
 
 # Data cleaning for Loan Eligibility
@@ -305,5 +305,5 @@ summary(home.eligibility.balanced)
 ```
 Save file
 ```{r}
-fwrite(home.eligibility.balanced, file="home_eligibility_prediction.csv")
+# fwrite(home.eligibility.balanced, file="home_eligibility_prediction.csv")
 ```
