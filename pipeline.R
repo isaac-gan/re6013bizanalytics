@@ -21,7 +21,7 @@ setwd('~/Documents/re6013bizanalytics')
 
 # Customer Data VEHICLE
 CUSTOMER.name <- "Jane Doe"
-CUSTOMER.vehicle_cost <- 10000
+CUSTOMER.vehicle_cost <- 100
 CUSTOMER.employment <- "salaried"
 CUSTOMER.current_month <- 8
 CUSTOMER.bureau_score <- 700
@@ -43,7 +43,7 @@ CUSTOMER.income <- 20000
 CUSTOMER.co_applicant_income <- 20000
 CUSTOMER.loan_term <- 146
 CUSTOMER.Property_Area <- "Urban"
-CUSTOMER.income <- 6984
+CUSTOMER.income <- 10000
 
 # Models
 model.vehicle.eligibility <- readRDS("./vehicle/vehicle_eligibility_LOGREG.rds")
@@ -109,4 +109,13 @@ result.home.amount <- BINS[as.integer(pred.home.amount)]
 data.home[, LoanMonthly := result.home.amount ]
 data.home[, LoanAmount := LoanMonthly * (CUSTOMER.loan_term %/% 30)]
 
-result.home.eligibility <- predict(model.home.eligibility, newdata=data.home, type="class")
+prob.home.eligibility <- predict(model.home.eligibility, newdata=data.home, type="class")
+result.home.eligibility <- ifelse(prob.home.eligibility == "N", 0, 1)
+
+print(paste(CUSTOMER.name , "Loan Eligibility Results"))
+print(paste("=== FOR VEHICLE ==="))
+print(paste("Eligibility:", ifelse(result.vehicle.eligibility == 0, "No", "Yes") ))
+print(paste("Loan Amount (if Eligible):", result.vehicle.amount))
+print(paste("=== FOR HOME ==="))
+print(paste("Eligibility:", ifelse(result.home.eligibility== 0, "No", "Yes") ))
+print(paste("Loan Amount (if Eligible):", result.home.amount * (CUSTOMER.loan_term %/% 30)))
