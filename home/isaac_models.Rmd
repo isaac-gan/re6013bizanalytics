@@ -92,6 +92,7 @@ output <- data.table(customer.1,apply.model)
 print(output)
 ```
 
+
 ## Save Model
 ```{r}
 saveRDS(m2, "./home_eligibility_CART.rds")
