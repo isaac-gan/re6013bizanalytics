@@ -97,14 +97,16 @@ data.home = data.table(
            Education=CUSTOMER.education,
            Self_Employed= ifelse(CUSTOMER.employment == "salaried", "No", "Yes"),
            CoapplicantIncome=CUSTOMER.co_applicant_income,
-           LoanAmount=c(146),
            Loan_Amount_Term=CUSTOMER.loan_term,
            Credit_History= toString(CUSTOMER.credit_history %/% 150),
            Property_Area=CUSTOMER.Property_Area,
            Income=CUSTOMER.income)
 
 # home predictions
-result.home.amount <- predict(model.home.amount, newdata=data.home, type="class")
-data.home[, LoanMonthly := 12.5]
+pred.home.amount <- predict(model.home.amount, newdata=data.home, type="class")
+BINS = array(c(4, 10, 70))
+result.home.amount <- BINS[as.integer(pred.home.amount)]
+data.home[, LoanMonthly := result.home.amount ]
+data.home[, LoanAmount := LoanMonthly * (CUSTOMER.loan_term %/% 30)]
 
 result.home.eligibility <- predict(model.home.eligibility, newdata=data.home, type="class")
