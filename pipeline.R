@@ -35,13 +35,15 @@ CUSTOMER.credit_history <- 0
 CUSTOMER.age <- 40
 
 # Customer Data HOME
-CUSTOMER.monthly_bracket <- 180
+CUSTOMER.gender <- "Female"
+CUSTOMER.married <- "Yes"
+CUSTOMER.dependents <- "0"
+CUSTOMER.education <-"Graduate"
 CUSTOMER.income <- 20000
-CUSTOMER.gender <- "F"
-
-
-
-
+CUSTOMER.co_applicant_income <- 20000
+CUSTOMER.loan_term <- 146
+CUSTOMER.Property_Area <- "Urban"
+CUSTOMER.income <- 6984
 
 # Models
 model.vehicle.eligibility <- readRDS("./vehicle/vehicle_eligibility_LOGREG.rds")
@@ -75,7 +77,7 @@ data.vehicle = data.table(
   ACCTS.INSTAL.AMT = 1
 )
 data.vehicle$employment <- factor(data.vehicle$employment, levels = c('unemployed', 'salaried', 'self employed'))
-data.vehicle$DisbursalMonth <- factor(data.vehicle$DisbursalMonth, levels = c(8,9,10))
+data.vehicle$DisbursalMonth <- factor(data.vehicle$DisbursalMonth, levels = c(1,2,3,4,5,6,7,8,9,10,11,12))
 
 # vehicle amount predictions
 data.vehicle.amount <- data.vehicle[,.(asset_cost, DisbursalMonth, age, employment, ACCTS.CURRENT.BALANCE)]
@@ -89,21 +91,20 @@ result.vehicle.eligibility <- ifelse(prob.vehicle.eligibility > 0.5, 0, 1)
 
 # create datatable for home models
 data.home = data.table(
-          Gender=c("Male"),
-           Married=c("Yes"),
-           Dependents=c("0"),
-           Education=c("Graduate"),
-           Self_Employed=c("No"),
-           ApplicantIncome=c(5005),
-           CoapplicantIncome=c(1960),
+          Gender=CUSTOMER.gender,
+           Married=CUSTOMER.married,
+           Dependents=CUSTOMER.dependents,
+           Education=CUSTOMER.education,
+           Self_Employed= ifelse(CUSTOMER.employment == "salaried", "No", "Yes"),
+           CoapplicantIncome=CUSTOMER.co_applicant_income,
            LoanAmount=c(146),
-           Loan_Amount_Term=c(343.4),
-           Credit_History=c("1"),
-           Property_Area=c("Urban"),
-           Loan_Status=c("Y"),
-           Income=c(6894),
-           LoanMonthly = c(13.942))
-  
+           Loan_Amount_Term=CUSTOMER.loan_term,
+           Credit_History= toString(CUSTOMER.credit_history %/% 150),
+           Property_Area=CUSTOMER.Property_Area,
+           Income=CUSTOMER.income)
+
 # home predictions
 result.home.amount <- predict(model.home.amount, newdata=data.home, type="class")
+data.home[, LoanMonthly := 12.5]
+
 result.home.eligibility <- predict(model.home.eligibility, newdata=data.home, type="class")
