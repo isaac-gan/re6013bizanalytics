@@ -132,7 +132,7 @@ loanmonthly.cutoffs <- c(0, 9.5, 12.5, 100)
 home.processed2[, loanmonthly.bracket := cut(LoanMonthly, breaks = loanmonthly.cutoffs, include.lowest = TRUE)]
 
 # drop columns
-home.processed2[,c("Loan_ID","Gender","CoapplicantIncome", "ApplicantIncome", "Loan_Amount_Term", "Loan_Status", "LoanMonthly"):=NULL]
+home.processed2[,c("Loan_ID","Gender","CoapplicantIncome", "ApplicantIncome", "Loan_Amount_Term", "LoanAmount", "Loan_Status", "LoanMonthly"):=NULL]
 summary(home.processed2)
 ```
 # Categorical CART
@@ -145,7 +145,7 @@ home.cat.cart <- createDataPartition(home.processed2$loanmonthly.bracket, p=0.8,
 home.cat.cart.train <- home.processed2[home.cat.cart,]
 home.cat.cart.test <- home.processed2[-home.cat.cart,]
 
-tree.cat.m1 <- rpart(loanmonthly.bracket ~ . -LoanAmount, data = home.cat.cart.train, method = "class", control = rpart.control(minsplit = 2, cp = 0))
+tree.cat.m1 <- rpart(loanmonthly.bracket ~ ., data = home.cat.cart.train, method = "class", control = rpart.control(minsplit = 2, cp = 0))
 
 # hard to actually view tree
 # rpart.plot(tree.cat.m1, nn=TRUE, main="Maximal Tree for categorical Loan Monthly")
