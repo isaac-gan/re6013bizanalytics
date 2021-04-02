@@ -14,6 +14,7 @@ library(rpart)
 library(rpart.plot)
 library(cvms) 
 library(tibble) # for evaluation of confustion matrix
+library(e1071)
 ```
 ```{r}
 eligibility.dt <- fread("home_eligibility_prediction.csv")
@@ -67,8 +68,13 @@ results <- data.table(test = eligibility.test.dt$Loan_Status,predict=cart.predic
 Confusion Matrix to determine accuracy
 ```{r}
 cart.predict$pred <- names(cart.predict)[max.col(cart.predict)]
-summary(eligibility.test.dt$Loan_Status)
+#summary(eligibility.test.dt$Loan_Status)
 m <- confusion_matrix(targets = results$test, predictions = results$predict)
-plot_confusion_matrix(m$`Confusion Matrix`[[1]])
+plot_confusion_matrix(m$`Confusion Matrix`[[1]],palette="Oranges")
+```
+Evaluate Model Accuracy
+```{r}
+xtab <- table(results$predict,results$test)
+confusionMatrix(xtab)
 ```
 
