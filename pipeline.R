@@ -35,6 +35,10 @@ CUSTOMER.credit_history <- 0
 CUSTOMER.age <- 40
 
 # Customer Data HOME
+CUSTOMER.monthly_bracket <- 180
+CUSTOMER.income <- 20000
+CUSTOMER.gender <- "F"
+
 
 
 
@@ -74,17 +78,32 @@ data.vehicle$employment <- factor(data.vehicle$employment, levels = c('unemploye
 data.vehicle$DisbursalMonth <- factor(data.vehicle$DisbursalMonth, levels = c(8,9,10))
 
 # vehicle amount predictions
-result.vehicle.amount <- 100
+data.vehicle.amount <- data.vehicle[,.(asset_cost, DisbursalMonth, age, employment, ACCTS.CURRENT.BALANCE)]
+result.vehicle.amount <- predict(model.vehicle.amount,newdata= data.vehicle.amount)
 data.vehicle[, disbursed_amount := result.vehicle.amount]
 data.vehicle[, ltv := (result.vehicle.amount / CUSTOMER.vehicle_cost) *100 ]
 
-summary(data.vehicle)
-
 # vehicle eligibility predictions
-prob.train <- predict(model.vehicle.eligibility, newdata = data.vehicle, type = 'response')
-result.vehicle.eligibility <- ifelse(prob.train > 0.5, 0, 1)
+prob.vehicle.eligibility <- predict(model.vehicle.eligibility, newdata = data.vehicle, type = 'response')
+result.vehicle.eligibility <- ifelse(prob.vehicle.eligibility > 0.5, 0, 1)
 
+# create datatable for home models
+data.home = data.table(
+          Gender=c("Male"),
+           Married=c("Yes"),
+           Dependents=c("0"),
+           Education=c("Graduate"),
+           Self_Employed=c("No"),
+           ApplicantIncome=c(5005),
+           CoapplicantIncome=c(1960),
+           LoanAmount=c(146),
+           Loan_Amount_Term=c(343.4),
+           Credit_History=c("1"),
+           Property_Area=c("Urban"),
+           Loan_Status=c("Y"),
+           Income=c(6894),
+           LoanMonthly = c(13.942))
   
 # home predictions
-#result.home.amount <-
-#result.home.default <-
+result.home.amount <- predict(model.home.amount, newdata=data.home, type="class")
+result.home.eligibility <- predict(model.home.eligibility, newdata=data.home, type="class")
