@@ -145,7 +145,7 @@ home.cat.cart <- createDataPartition(home.processed2$loanmonthly.bracket, p=0.8,
 home.cat.cart.train <- home.processed2[home.cat.cart,]
 home.cat.cart.test <- home.processed2[-home.cat.cart,]
 
-tree.cat.m1 <- rpart(loanmonthly.bracket ~ ., data = home.cat.cart.train, method = "class", control = rpart.control(minsplit = 2, cp = 0))
+tree.cat.m1 <- rpart(loanmonthly.bracket ~ . -LoanAmount, data = home.cat.cart.train, method = "class", control = rpart.control(minsplit = 2, cp = 0))
 
 # hard to actually view tree
 # rpart.plot(tree.cat.m1, nn=TRUE, main="Maximal Tree for categorical Loan Monthly")
@@ -158,13 +158,13 @@ printcp(tree.cat.m1) # root node error is 0.65083 (approx 2/3 as expected)
 ```
 ## search for optimum
 ```{r}
-plotcp(tree.cat.m1) # we can see an optimal xerror @ approx CP=0.0030303 with xerror=0.081818
+plotcp(tree.cat.m1) # we can see an optimal xerror @ approx CP=0.0318182 with xerror=0.55455
 ```
 
 ## prune tree
 ```{r}
-# choose cp ~ 0.0031 since it is the simplest tree given the CV error cap (xerror + xstd)
-cp1 <- 0.0031
+# choose cp ~ 0.031 since it is the simplest tree given the CV error cap (xerror + xstd)
+cp1 <- 0.031
 tree.cat.m1.pruned <- prune(tree.cat.m1, cp = cp1)
 
 printcp(tree.cat.m1.pruned)
@@ -173,7 +173,7 @@ rpart.plot(tree.cat.m1.pruned, nn=TRUE, main = paste(c("Pruned tree with cp =", 
 ```
 ## confusion matrix
 ```{r}
-tree.cat.m1.pred <- data.table(predict(tree.cat.m1, home.cat.cart.test))
+tree.cat.m1.pred <- data.table(predict(tree.cat.m1.pruned, home.cat.cart.test))
 tree.cat.m1.pred$pred <- names(tree.cat.m1.pred)[max.col(tree.cat.m1.pred)]
 m <- confusion_matrix(targets = home.cat.cart.test$loanmonthly.bracket, predictions = tree.cat.m1.pred$pred)
 plot_confusion_matrix(m$`Confusion Matrix`[[1]])
