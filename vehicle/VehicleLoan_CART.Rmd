@@ -1,0 +1,114 @@
+---
+title: "Vehicle CART Model"
+output: html_notebook
+---
+
+This notebook depends on the cleaned dataset from the Logistic Regression code.
+
+# Setup
+First, let's set up our working environment and import the dataset.
+```{r}
+library(data.table)
+library(rpart)
+library(rpart.plot)
+library(caret)
+library(MLmetrics)
+library(magrittr)
+
+set.seed(2014)
+setwd('~/Desktop/REP Acad/RE6013 Biz Ana/Project WhiteRock/re6013bizanalytics/vehicle')
+VehicleLoan.dt <- fread('VehicleLoan_cleaned.csv')
+head(VehicleLoan.dt)
+```
+# Data cleaning
+We should remove loan_default as we would not know whether the customer is defaulting at the point of disbursement. Also, we should remove loan-to-value as it is not a prior.
+```{r}
+VehicleLoan.dt[, c('loan_default', 'ltv', 'V1') := NULL]
+head(VehicleLoan.dt)
+```
+# Train test split 
+Lets use caret to create our train test split.
+```{r}
+training.samples <- VehicleLoan.dt$disbursed_amount %>%
+  createDataPartition(p = 0.8, list = FALSE)
+train.data  <- VehicleLoan.dt[training.samples,]
+test.data <- VehicleLoan.dt[-training.samples,]
+```
+# Maximal Tree
+Lets build our maximal tree. Takes pretty long due to number of feature columns.
+```{r}
+cart1 <-
+  rpart(
+    disbursed_amount ~ .,
+    data = train.data,
+    method = 'anova',
+    control = rpart.control(minsplit = 20, cp = 0)
+  )
+```
+# Pruning
+Find the optimal cp as shown in lectures
+```{r}
+CVerror.cap <-
+  cart1$cptable[which.min(cart1$cptable[, "xerror"]), "xerror"] + cart1$cptable[which.min(cart1$cptable[, "xerror"]), "xstd"]
+i <- 1
+j <- 4
+while (cart1$cptable[i, j] > CVerror.cap) {
+  i <- i + 1
+}
+cp1 = ifelse(i > 1, sqrt(cart1$cptable[i, 1] * cart1$cptable[i - 1, 1]), 1)
+```
+Prune the tree
+```{r}
+cart2 <- prune(cart1, cp = cp1)
+```
+# Test
+```{r}
+predicted.amount <- cart2 %>%
+  predict(test.data)
+RMSE(predicted.amount, test.data$disbursed_amount) # RMSE
+R2_Score(predicted.amount, test.data$disbursed_amount) #R2
+```
+# Variable Importance
+Let's find out the variable importance so that we can further shrink our model
+```{r}
+cart2$variable.importance
+```
+# Grow another tree
+Now let's regrow our tree with the smaller feature set. First we set up the data:
+```{r}
+significant.columns = c('asset_cost', 'DisbursalMonth', 'age', 'employment', 'ACCTS.CURRENT.BALANCE', 'disbursed_amount')
+VehicleLoan.narrow.dt = VehicleLoan.dt[, ..significant.columns]
+train.data.narrow  <- VehicleLoan.narrow.dt[training.samples,]
+test.data.narrow <- VehicleLoan.narrow.dt[-training.samples,]
+```
+Then lets repeat the steps.
+```{r}
+cart3 <-
+  rpart(
+    disbursed_amount ~ .,
+    data = train.data.narrow,
+    method = 'anova',
+    control = rpart.control(minsplit = 20, cp = 0)
+  )
+CVerror.cap3 <-
+  cart3$cptable[which.min(cart3$cptable[, "xerror"]), "xerror"] + cart3$cptable[which.min(cart3$cptable[, "xerror"]), "xstd"]
+i <- 1
+j <- 4
+while (cart3$cptable[i, j] > CVerror.cap3) {
+  i <- i + 1
+}
+cp3 = ifelse(i > 1, sqrt(cart3$cptable[i, 1] * cart3$cptable[i - 1, 1]), 1)
+cart4 <- prune(cart3, cp = cp3)
+cart4$variable.importance
+```
+# Test
+```{r}
+predicted.amount <- cart4 %>%
+  predict(test.data.narrow)
+RMSE(predicted.amount, test.data.narrow$disbursed_amount) # RMSE
+R2_Score(predicted.amount, test.data.narrow$disbursed_amount) #R2
+```
+# Save
+```{r}
+saveRDS(cart4, "./vehicle_amount_CART.rds")
+```
