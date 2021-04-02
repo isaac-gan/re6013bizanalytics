@@ -1,0 +1,180 @@
+---
+title: "RE6013 Business Analytics Training"
+output: html_notebook
+---
+
+```{r}
+library(data.table)
+library(caret) # install.packages("caret")
+library(ggplot2)
+library(caTools) # install.packages("caTools")
+library(rpart)
+library(rpart.plot)
+library(cvms) # install.packages("cvms") for confustion matrix
+library(tibble) # for evaluation of confustion matrix
+```
+
+# Data preprocessing for Linear Regression
+
+we need to convert categorical features to dummy variables for linear regression
+```{r}
+summary(home.loan.no.outlier)
+```
+Features to convert to dummy then drop:
+- Married
+- Dependents
+- Education
+- Self_Employed
+- Credit_History
+- Property_Area
+Note that binary values can be converted to just 1/0
+
+Features to drop
+- Loan_ID
+- Gender
+- ApplicantIncome
+- CoapplicantIncome
+- Loan_Amount_Term
+- Loan_Status
+```{r}
+home.processed <- copy(home.loan.no.outlier)
+
+m <- model.matrix( ~ Married - 1, data=home.processed)
+home.processed$married <- m[,2]
+home.processed[,Married:=NULL]
+
+m <- model.matrix( ~ Dependents - 1, data=home.processed)
+home.processed$dep.0 <- m[,1]
+home.processed$dep.1 <- m[,2]
+home.processed$dep.2 <- m[,3]
+# 3+ is encoded as 0 in all other columns
+home.processed[,Dependents:=NULL]
+
+m <- model.matrix( ~ Education - 1, data=home.processed)
+home.processed$graduated <- m[,1]
+home.processed[,Education:=NULL]
+
+m <- model.matrix( ~ Self_Employed - 1, data=home.processed)
+home.processed$self_employed <- m[,1]
+home.processed[,Self_Employed:=NULL]
+
+m <- model.matrix( ~ Credit_History - 1, data=home.processed)
+home.processed$has_credit_history <- m[,2]
+home.processed[,Credit_History:=NULL]
+
+m <- model.matrix( ~ Property_Area - 1, data=home.processed)
+home.processed$pa.r <- m[,1]
+home.processed$pa.s <- m[,2]
+# urban is encoded as 0 in all other columns
+home.processed[,Property_Area:=NULL]
+
+home.processed[,c("Loan_ID", "Gender", "ApplicantIncome", "CoapplicantIncome", "Loan_Amount_Term", "Loan_Status"):=NULL]
+
+summary(home.processed)
+# drop unnecessary columns
+#home.processed[, c():=NULL]
+```
+# Linear Regression
+
+## Finding useful features
+- setting threshold for p < 0.05, only LoanAmount,Income and dep.0 make the cut
+```{r}
+set.seed(6013)
+lm1 <- lm(LoanMonthly ~ ., data=home.processed)
+summary(lm1)
+```
+## Model training and testing with standard train-test split
+```{r}
+set.seed(6013)
+
+home.lin.reg <- createDataPartition(home.processed$LoanMonthly, p=0.8, list=FALSE)
+home.lin.reg.train <- home.processed[home.lin.reg,]
+home.lin.reg.test <- home.processed[-home.lin.reg,]
+
+lm2 <- lm(LoanMonthly ~ Income + LoanAmount + dep.0, data=home.lin.reg.train)
+
+lm2.pred <- predict(lm2, home.lin.reg.test)
+data.frame(R2=R2(lm2.pred, home.lin.reg.test$LoanMonthly), RMSE=RMSE(lm2.pred, home.lin.reg.test$LoanMonthly), MAE=MAE(lm2.pred, home.lin.reg.test$LoanMonthly))
+```
+
+## Model training and testing with cross validation
+```{r}
+set.seed(6013)
+train.control <- trainControl(method = "cv", number = 5)
+lm.cv <- train(LoanMonthly ~ Income + LoanAmount + dep.0, data=home.processed, method="lm", trControl=train.control)
+print(lm.cv)
+
+# RMSE=6.20094 R2=0.641125 MAE=2.635741
+```
+```{r}
+mean(home.processed$LoanMonthly)
+
+#For both (xval and standatd train test split), the RMSE is nearly 50% of the mean, indicating a rather poor model
+```
+
+# Data-Preprocessing for Categorical Classifier
+
+we need to put continuous labels into bins to convert to classification problem
+```{r}
+#see distribution of label (LoanMonthly) to decide bins
+ggplot(home.loan.no.outlier, aes(LoanMonthly)) + geom_histogram(binwidth = 1)
+summary(home.loan.no.outlier$LoanMonthly)
+
+# From distribution, may choose the following tiers
+#
+```
+Create cutoffs and put into brackets
+```{r}
+home.processed2 <- copy(home.loan.no.outlier)
+
+# create 3 intervals
+loanmonthly.cutoffs <- c(0, 9.5, 12.5, 100)
+home.processed2[, loanmonthly.bracket := cut(LoanMonthly, breaks = loanmonthly.cutoffs, include.lowest = TRUE)]
+
+# drop columns
+home.processed2[,c("Loan_ID","Gender","CoapplicantIncome", "ApplicantIncome", "Loan_Amount_Term", "Loan_Status", "LoanMonthly"):=NULL]
+summary(home.processed2)
+```
+# Categorical CART
+
+## grow to max
+```{r}
+set.seed(6013)
+
+home.cat.cart <- createDataPartition(home.processed2$loanmonthly.bracket, p=0.8, list=FALSE)
+home.cat.cart.train <- home.processed2[home.cat.cart,]
+home.cat.cart.test <- home.processed2[-home.cat.cart,]
+
+tree.cat.m1 <- rpart(loanmonthly.bracket ~ ., data = home.cat.cart.train, method = "class", control = rpart.control(minsplit = 2, cp = 0))
+
+# hard to actually view tree
+# rpart.plot(tree.cat.m1, nn=TRUE, main="Maximal Tree for categorical Loan Monthly")
+
+# view important variables
+tree.cat.m1$variable.importance
+
+# view print instead
+printcp(tree.cat.m1) # root node error is 0.65083 (approx 2/3 as expected)
+```
+## search for optimum
+```{r}
+plotcp(tree.cat.m1) # we can see an optimal xerror @ approx CP=0.0030303 with xerror=0.081818
+```
+
+## prune tree
+```{r}
+# choose cp ~ 0.0031 since it is the simplest tree given the CV error cap (xerror + xstd)
+cp1 <- 0.0031
+tree.cat.m1.pruned <- prune(tree.cat.m1, cp = cp1)
+
+printcp(tree.cat.m1.pruned)
+
+rpart.plot(tree.cat.m1.pruned, nn=TRUE, main = paste(c("Pruned tree with cp =", cp1), collapse = " "))
+```
+## confusion matrix
+```{r}
+tree.cat.m1.pred <- data.table(predict(tree.cat.m1, home.cat.cart.test))
+tree.cat.m1.pred$pred <- names(tree.cat.m1.pred)[max.col(tree.cat.m1.pred)]
+m <- confusion_matrix(targets = home.cat.cart.test$loanmonthly.bracket, predictions = tree.cat.m1.pred$pred)
+plot_confusion_matrix(m$`Confusion Matrix`[[1]])
+```

@@ -1,0 +1,101 @@
+---
+title: "Home Loan Eligibility Classification by Isaac"
+output: html_notebook
+---
+
+```{r}
+library(data.table)
+library(ggplot2)
+library(corrplot)
+library(DMwR2)
+library(caret)
+library(caTools)
+library(rpart)
+library(rpart.plot)
+library(cvms) 
+library(tibble) # for evaluation of confustion matrix
+library(e1071)
+```
+```{r}
+eligibility.dt <- fread("home_eligibility_prediction.csv")
+castfactor <- c('Gender','Married','Dependents','Education','Self_Employed','Property_Area','Loan_Status','Credit_History')
+eligibility.dt[,castfactor]<-lapply(eligibility.dt[,castfactor,with=FALSE],factor)
+summary(eligibility.dt)
+```
+```{r}
+trainIndex <- createDataPartition(eligibility.dt$Loan_Status, p=0.8, list=FALSE)
+#print(trainIndex)
+eligibility.train.dt <- eligibility.dt[trainIndex,]
+eligibility.test.dt <- eligibility.dt[-trainIndex,]
+```
+
+##Drop Loan_ID
+```{r}
+eligibility.train.dt[,Loan_ID:=NULL]
+```
+
+##Implementation of CART classification of loan eligibility + Identify optimal tree
+```{r}
+set.seed(1000)
+model <- rpart(Loan_Status ~., data = eligibility.train.dt,method = 'class',control = rpart.control(minsplit =2,cp=0))
+```
+
+```{r}
+rpart.plot(model,nn=T,main="Maximal Tree")
+#print(model)
+printcp(model)
+```
+
+```{r}
+plotcp(model,lty=2,col=4, main="Subtrees in Model 1")
+```
+```{r}
+#print(model$cptable)
+#print(model)
+xerror_min <- min(model$cptable[,4])
+cp_min_index <- match(xerror_min,model$cptable[,4])
+cp1 <- model$cptable[cp_min_index,1] #Choose cp bsaed on whichever xerror is lowest
+print(cp1)
+m2 <- prune(model,cp=cp1)
+rpart.plot(m2,nn=T,main="Pruned Tree with cp minimum")
+```
+
+```{r}
+cart.predict <- data.table(predict(m2,eligibility.test.dt, type = "class"))
+results <- data.table(test = eligibility.test.dt$Loan_Status,predict=cart.predict$V1)
+#print(results)
+```
+
+##Confusion Matrix to visualise accuracy
+```{r}
+cart.predict$pred <- names(cart.predict)[max.col(cart.predict)]
+#summary(eligibility.test.dt$Loan_Status)
+m <- confusion_matrix(targets = results$test, predictions = results$predict)
+plot_confusion_matrix(m$`Confusion Matrix`[[1]],palette="Oranges")
+```
+##Evaluate Model Performance
+```{r}
+xtab <- table(results$predict,results$test)
+confusionMatrix(xtab)
+```
+## Experiment with how model classifies a spoofed data point
+```{r}
+#summary(eligibility.train.dt)
+customer.1 <- data.table(Gender=c("Male"),Married=c("Yes"),Dependents=c("0"),
+                       Education=c("Graduate"),Self_Employed=c("No"),
+                       ApplicantIncome=c(5005),CoapplicantIncome=c(1960),
+                       LoanAmount=c(146),Loan_Amount_Term=c(343.4),
+                       Credit_History=c("1"),Property_Area=c("Urban"),
+                       Loan_Status=c("Y"),Income=c(6894),
+                       LoanMonthly = c(13.942))
+apply.model <- predict(m2,newdata=customer.1,type="class")
+output <- data.table(customer.1,apply.model)
+print(output)
+```
+
+##Implement Log Reg to compare against CART performance
+```{r}
+
+```
+
+
