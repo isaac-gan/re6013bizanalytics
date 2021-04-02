@@ -178,3 +178,9 @@ tree.cat.m1.pred$pred <- names(tree.cat.m1.pred)[max.col(tree.cat.m1.pred)]
 m <- confusion_matrix(targets = home.cat.cart.test$loanmonthly.bracket, predictions = tree.cat.m1.pred$pred)
 plot_confusion_matrix(m$`Confusion Matrix`[[1]])
 ```
+
+## Save
+```{r}
+saveRDS(tree.cat.m1.pruned, "./home_amount_CART.rds")
+
+```
