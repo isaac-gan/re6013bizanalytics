@@ -1,0 +1,74 @@
+---
+title: "Home Loan Eligibility Classification by Isaac"
+output: html_notebook
+---
+
+```{r}
+library(data.table)
+library(ggplot2)
+library(corrplot)
+library(DMwR2)
+library(caret)
+library(caTools)
+library(rpart)
+library(rpart.plot)
+library(cvms) 
+library(tibble) # for evaluation of confustion matrix
+```
+```{r}
+eligibility.dt <- fread("home_eligibility_prediction.csv")
+eligibility.dt[,castfactor]<-lapply(eligibility.dt[,castfactor,with=FALSE],factor)
+summary(eligibility.dt)
+```
+```{r}
+trainIndex <- createDataPartition(eligibility.dt$Loan_Status, p=0.8, list=FALSE)
+#print(trainIndex)
+eligibility.train.dt <- eligibility.dt[trainIndex,]
+eligibility.test.dt <- eligibility.dt[-trainIndex,]
+```
+
+
+```{r}
+castfactor <- c('Gender','Married','Dependents','Education','Self_Employed','Property_Area','Loan_Status')
+```
+
+Drop Loan_ID
+```{r}
+eligibility.train.dt[,Loan_ID:=NULL]
+```
+
+Implementation of CART classification of loan eligibility
+Identify optimal tree
+```{r}
+set.seed(1000)
+model <- rpart(Loan_Status ~., data = eligibility.train.dt,method = 'class',control = rpart.control(minsplit =2,cp=0))
+```
+
+```{r}
+rpart.plot(model,nn=T,main="Maximal Tree")
+#print(model)
+printcp(model)
+```
+
+```{r}
+plotcp(model,lty=2,col=2, main="Subtrees in Model 1")
+```
+```{r}
+cp1 <- 0.0194805
+m2 <- prune(model,cp=cp1)
+rpart.plot(m2,nn=T,main="Pruned Tree with cp = 0.0194805")
+```
+```{r}
+cart.predict <- data.table(predict(m2,eligibility.test.dt, type = "class"))
+results <- data.table(test = eligibility.test.dt$Loan_Status,predict=cart.predict$V1)
+#print(results)
+```
+
+Confusion Matrix to determine accuracy
+```{r}
+cart.predict$pred <- names(cart.predict)[max.col(cart.predict)]
+summary(eligibility.test.dt$Loan_Status)
+m <- confusion_matrix(targets = results$test, predictions = results$predict)
+plot_confusion_matrix(m$`Confusion Matrix`[[1]])
+```
+
