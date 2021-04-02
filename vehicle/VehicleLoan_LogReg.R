@@ -66,7 +66,7 @@ VehicleLoan.dt[, c("PRI.CURRENT.BALANCE","SEC.CURRENT.BALANCE","PRI.SANCTIONED.A
 
 #factorise columns
 VehicleLoan.dt$loan_default <- factor(VehicleLoan.dt$loan_default)
-VehicleLoan.dt$DisbursalMonth <- factor(VehicleLoan.dt$DisbursalMonth)
+VehicleLoan.dt$DisbursalMonth <- factor(VehicleLoan.dt$DisbursalMonth, levels = c(1,2,3,4,5,6,7,8,9,10,11,12))
 
 #logistic regression
 levels(VehicleLoan.dt$loan_default)
@@ -175,3 +175,4 @@ mean(predict.default.test == testset$loan_default)
 
 ## True positive increased but true negative decreased, as expected on balanced data.
 
+saveRDS(m5, "./vehicle_eligibility_LOGREG.rds")
