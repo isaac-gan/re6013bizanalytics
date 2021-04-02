@@ -1977,15 +1977,96 @@ print(output)</code></pre>
 <!-- rnb-frame-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
+<p>##Bin continuous variables</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBjcmVhdGUgMyBpbnRlcnZhbHNcbmxvYW5tb250aGx5LmN1dG9mZnMgPC0gYygwLCA5LjUsIDEyLjUsIDEwMClcbmVsaWdpYmlsaXR5LnRyYWluLmR0WywgbG9hbm1vbnRobHkuYnJhY2tldCA6PSBjdXQoTG9hbk1vbnRobHksIGJyZWFrcyA9IGxvYW5tb250aGx5LmN1dG9mZnMsIGluY2x1ZGUubG93ZXN0ID0gVFJVRSldXG5cbiMgZHJvcCBjb2x1bW5zXG5lbGlnaWJpbGl0eS50cmFpbi5kdFssYyhcIkdlbmRlclwiLFwiQ29hcHBsaWNhbnRJbmNvbWVcIiwgXCJBcHBsaWNhbnRJbmNvbWVcIiwgXCJMb2FuX0Ftb3VudF9UZXJtXCIsIFwiTG9hbk1vbnRobHlcIik6PU5VTExdXG5zdW1tYXJ5KGVsaWdpYmlsaXR5LnRyYWluLmR0KVxuYGBgIn0= -->
+<pre class="r"><code># create 3 intervals
+loanmonthly.cutoffs &lt;- c(0, 9.5, 12.5, 100)
+eligibility.train.dt[, loanmonthly.bracket := cut(LoanMonthly, breaks = loanmonthly.cutoffs, include.lowest = TRUE)]
+
+# drop columns
+eligibility.train.dt[,c(&quot;Gender&quot;,&quot;CoapplicantIncome&quot;, &quot;ApplicantIncome&quot;, &quot;Loan_Amount_Term&quot;, &quot;LoanMonthly&quot;):=NULL]
+summary(eligibility.train.dt)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiIE1hcnJpZWQgICBEZXBlbmRlbnRzICAgICAgICBFZHVjYXRpb24gICBTZWxmX0VtcGxveWVkICAgTG9hbkFtb3VudCAgICBDcmVkaXRfSGlzdG9yeSAgIFByb3BlcnR5X0FyZWEgTG9hbl9TdGF0dXMgICAgIEluY29tZSAgICAgXG4gTm8gOjExNyAgIDAgOjE4NCAgICAgR3JhZHVhdGUgICAgOjIzOCAgIE5vIDoyNjIgICAgICAgTWluLiAgIDogIDkuMCAgIDA6IDg5ICAgICAgICAgIFJ1cmFsICAgIDogOTkgICBOOjE1NCAgICAgICBNaW4uICAgOiAxNDQyICBcbiBZZXM6MTkxICAgMSA6IDU0ICAgICBOb3QgR3JhZHVhdGU6IDcwICAgWWVzOiA0NiAgICAgICAxc3QgUXUuOjEwNC44ICAgMToyMTkgICAgICAgICAgU2VtaXVyYmFuOjEwNSAgIFk6MTU0ICAgICAgIDFzdCBRdS46IDQyMzMgIFxuICAgICAgICAgICAyIDogNDUgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIE1lZGlhbiA6MTMyLjAgICAgICAgICAgICAgICAgICBVcmJhbiAgICA6MTA0ICAgICAgICAgICAgICAgTWVkaWFuIDogNTU2MiAgXG4gICAgICAgICAgIDMrOiAyNSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgTWVhbiAgIDoxNDUuMCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBNZWFuICAgOiA2OTk1ICBcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAzcmQgUXUuOjE2NS4wICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDNyZCBRdS46IDc1NDQgIFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIE1heC4gICA6NTAwLjAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgTWF4LiAgIDo4MTAwMCAgXG4gbG9hbm1vbnRobHkuYnJhY2tldFxuIFswLDkuNV0gICA6IDk2ICAgICBcbiAoOS41LDEyLjVdOiA5NSAgICAgXG4gKDEyLjUsMTAwXToxMTYgICAgIFxuIE5BJ3MgICAgICA6ICAxICAgICBcbiAgICAgICAgICAgICAgICAgICAgXG4gICAgICAgICAgICAgICAgICAgIFxuIn0= -->
+<pre><code> Married   Dependents        Education   Self_Employed   LoanAmount    Credit_History   Property_Area Loan_Status     Income     
+ No :117   0 :184     Graduate    :238   No :262       Min.   :  9.0   0: 89          Rural    : 99   N:154       Min.   : 1442  
+ Yes:191   1 : 54     Not Graduate: 70   Yes: 46       1st Qu.:104.8   1:219          Semiurban:105   Y:154       1st Qu.: 4233  
+           2 : 45                                      Median :132.0                  Urban    :104               Median : 5562  
+           3+: 25                                      Mean   :145.0                                              Mean   : 6995  
+                                                       3rd Qu.:165.0                                              3rd Qu.: 7544  
+                                                       Max.   :500.0                                              Max.   :81000  
+ loanmonthly.bracket
+ [0,9.5]   : 96     
+ (9.5,12.5]: 95     
+ (12.5,100]:116     
+ NA&#39;s      :  1     
+                    
+                    </code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
 <p>##Implement Log Reg to compare against CART performance</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3VtbWFyeShlbGlnaWJpbGl0eS5tMylcblxuYGBgIn0= -->
+<pre class="r"><code>summary(eligibility.m3)
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiXG5DYWxsOlxuZ2xtKGZvcm11bGEgPSBMb2FuX1N0YXR1cyB+IC4sIGZhbWlseSA9IGJpbm9taWFsLCBkYXRhID0gZWxpZ2liaWxpdHkudHJhaW4uZHQpXG5cbkRldmlhbmNlIFJlc2lkdWFsczogXG4gICAgTWluICAgICAgIDFRICAgTWVkaWFuICAgICAgIDNRICAgICAgTWF4ICBcbi0yLjA0ODkgIC0wLjg3NzcgICAwLjU2NjMgICAwLjkyMjQgICAyLjE3NTEgIFxuXG5Db2VmZmljaWVudHM6XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIEVzdGltYXRlIFN0ZC4gRXJyb3IgeiB2YWx1ZSBQcig+fHp8KSAgICBcbihJbnRlcmNlcHQpICAgICAgICAgICAgICAgICAgIC0xLjk2MGUrMDAgIDUuMTg4ZS0wMSAgLTMuNzc5IDAuMDAwMTU4ICoqKlxuTWFycmllZFllcyAgICAgICAgICAgICAgICAgICAgIDQuOTY5ZS0wMSAgMy4wMTdlLTAxICAgMS42NDcgMC4wOTk0OTggLiAgXG5EZXBlbmRlbnRzMSAgICAgICAgICAgICAgICAgICAtMS44NzllLTAxICAzLjg2NGUtMDEgIC0wLjQ4NiAwLjYyNjc4OCAgICBcbkRlcGVuZGVudHMyICAgICAgICAgICAgICAgICAgIC00LjM2N2UtMDIgIDQuMDQ3ZS0wMSAgLTAuMTA4IDAuOTE0MDU3ICAgIFxuRGVwZW5kZW50czMrICAgICAgICAgICAgICAgICAgLTYuNTcxZS0wMSAgNS4xODdlLTAxICAtMS4yNjcgMC4yMDUyMTIgICAgXG5FZHVjYXRpb25Ob3QgR3JhZHVhdGUgICAgICAgICAtMy43MjVlLTAxICAzLjIyN2UtMDEgIC0xLjE1NCAwLjI0ODQyMyAgICBcblNlbGZfRW1wbG95ZWRZZXMgICAgICAgICAgICAgICAzLjQ1NWUtMDEgIDMuODUwZS0wMSAgIDAuODk3IDAuMzY5NTIwICAgIFxuTG9hbkFtb3VudCAgICAgICAgICAgICAgICAgICAgLTMuOTM4ZS0wMyAgMy4xMzJlLTAzICAtMS4yNTggMC4yMDg1NTkgICAgXG5DcmVkaXRfSGlzdG9yeTEgICAgICAgICAgICAgICAgMi40MTVlKzAwICAzLjQxMmUtMDEgICA3LjA3NiAxLjQ4ZS0xMiAqKipcblByb3BlcnR5X0FyZWFTZW1pdXJiYW4gICAgICAgICAzLjA4OWUtMDEgIDMuMjc4ZS0wMSAgIDAuOTQzIDAuMzQ1OTExICAgIFxuUHJvcGVydHlfQXJlYVVyYmFuICAgICAgICAgICAgLTEuMzMyZS0wMSAgMy4yMzZlLTAxICAtMC40MTIgMC42ODA1ODUgICAgXG5JbmNvbWUgICAgICAgICAgICAgICAgICAgICAgICAgMy44MDFlLTA2ICAzLjUwOGUtMDUgICAwLjEwOCAwLjkxMzcxMSAgICBcbmxvYW5tb250aGx5LmJyYWNrZXQoOS41LDEyLjVdICA5LjUwM2UtMDEgIDMuNjIzZS0wMSAgIDIuNjIzIDAuMDA4NzA4ICoqIFxubG9hbm1vbnRobHkuYnJhY2tldCgxMi41LDEwMF0gIDQuNzU3ZS0wMSAgNC40NzFlLTAxICAgMS4wNjQgMC4yODczNjYgICAgXG4tLS1cblNpZ25pZi4gY29kZXM6ICAwIOKAmCoqKuKAmSAwLjAwMSDigJgqKuKAmSAwLjAxIOKAmCrigJkgMC4wNSDigJgu4oCZIDAuMSDigJgg4oCZIDFcblxuKERpc3BlcnNpb24gcGFyYW1ldGVyIGZvciBiaW5vbWlhbCBmYW1pbHkgdGFrZW4gdG8gYmUgMSlcblxuICAgIE51bGwgZGV2aWFuY2U6IDQyNS41OSAgb24gMzA2ICBkZWdyZWVzIG9mIGZyZWVkb21cblJlc2lkdWFsIGRldmlhbmNlOiAzNDUuMjMgIG9uIDI5MyAgZGVncmVlcyBvZiBmcmVlZG9tXG4gICgxIG9ic2VydmF0aW9uIGRlbGV0ZWQgZHVlIHRvIG1pc3NpbmduZXNzKVxuQUlDOiAzNzMuMjNcblxuTnVtYmVyIG9mIEZpc2hlciBTY29yaW5nIGl0ZXJhdGlvbnM6IDRcbiJ9 -->
+<pre><code>
+Call:
+glm(formula = Loan_Status ~ ., family = binomial, data = eligibility.train.dt)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-2.0489  -0.8777   0.5663   0.9224   2.1751  
+
+Coefficients:
+                                Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)                   -1.960e+00  5.188e-01  -3.779 0.000158 ***
+MarriedYes                     4.969e-01  3.017e-01   1.647 0.099498 .  
+Dependents1                   -1.879e-01  3.864e-01  -0.486 0.626788    
+Dependents2                   -4.367e-02  4.047e-01  -0.108 0.914057    
+Dependents3+                  -6.571e-01  5.187e-01  -1.267 0.205212    
+EducationNot Graduate         -3.725e-01  3.227e-01  -1.154 0.248423    
+Self_EmployedYes               3.455e-01  3.850e-01   0.897 0.369520    
+LoanAmount                    -3.938e-03  3.132e-03  -1.258 0.208559    
+Credit_History1                2.415e+00  3.412e-01   7.076 1.48e-12 ***
+Property_AreaSemiurban         3.089e-01  3.278e-01   0.943 0.345911    
+Property_AreaUrban            -1.332e-01  3.236e-01  -0.412 0.680585    
+Income                         3.801e-06  3.508e-05   0.108 0.913711    
+loanmonthly.bracket(9.5,12.5]  9.503e-01  3.623e-01   2.623 0.008708 ** 
+loanmonthly.bracket(12.5,100]  4.757e-01  4.471e-01   1.064 0.287366    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 425.59  on 306  degrees of freedom
+Residual deviance: 345.23  on 293  degrees of freedom
+  (1 observation deleted due to missingness)
+AIC: 373.23
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGxvdCh4PWVsaWdpYmlsaXR5LnRlc3QuZHQkTG9hbl9TdGF0dXMseT1wcm9iLHR5cGU9XCIxXCIsbWFpbj0nTG9nIFJlZyBQcm9iIG9mIEJlaW5nIEVsaWdpYmxlIGZvciBMb2FuJylcblxuYGBgIn0= -->
+<pre class="r"><code>plot(x=eligibility.test.dt$Loan_Status,y=prob,type=&quot;1&quot;,main=&#39;Log Reg Prob of Being Eligible for Loan&#39;)
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiRXJyb3IgaW4gc3RhdHM6Om1vZGVsLmZyYW1lLmRlZmF1bHQoZm9ybXVsYSA9IHkgfiB4KSA6IFxuICB2YXJpYWJsZSBsZW5ndGhzIGRpZmZlciAoZm91bmQgZm9yICd4JylcbiJ9 -->
+<pre><code>Error in stats::model.frame.default(formula = y ~ x) : 
+  variable lengths differ (found for &#39;x&#39;)</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIkhvbWUgTG9hbiBFbGlnaWJpbGl0eSBDbGFzc2lmaWNhdGlvbiBieSBJc2FhYyINCm91dHB1dDogaHRtbF9ub3RlYm9vaw0KLS0tDQoNCmBgYHtyfQ0KbGlicmFyeShkYXRhLnRhYmxlKQ0KbGlicmFyeShnZ3Bsb3QyKQ0KbGlicmFyeShjb3JycGxvdCkNCmxpYnJhcnkoRE13UjIpDQpsaWJyYXJ5KGNhcmV0KQ0KbGlicmFyeShjYVRvb2xzKQ0KbGlicmFyeShycGFydCkNCmxpYnJhcnkocnBhcnQucGxvdCkNCmxpYnJhcnkoY3ZtcykgDQpsaWJyYXJ5KHRpYmJsZSkgIyBmb3IgZXZhbHVhdGlvbiBvZiBjb25mdXN0aW9uIG1hdHJpeA0KbGlicmFyeShlMTA3MSkNCmBgYA0KYGBge3J9DQplbGlnaWJpbGl0eS5kdCA8LSBmcmVhZCgiaG9tZV9lbGlnaWJpbGl0eV9wcmVkaWN0aW9uLmNzdiIpDQpjYXN0ZmFjdG9yIDwtIGMoJ0dlbmRlcicsJ01hcnJpZWQnLCdEZXBlbmRlbnRzJywnRWR1Y2F0aW9uJywnU2VsZl9FbXBsb3llZCcsJ1Byb3BlcnR5X0FyZWEnLCdMb2FuX1N0YXR1cycsJ0NyZWRpdF9IaXN0b3J5JykNCmVsaWdpYmlsaXR5LmR0WyxjYXN0ZmFjdG9yXTwtbGFwcGx5KGVsaWdpYmlsaXR5LmR0WyxjYXN0ZmFjdG9yLHdpdGg9RkFMU0VdLGZhY3RvcikNCnN1bW1hcnkoZWxpZ2liaWxpdHkuZHQpDQpgYGANCmBgYHtyfQ0KdHJhaW5JbmRleCA8LSBjcmVhdGVEYXRhUGFydGl0aW9uKGVsaWdpYmlsaXR5LmR0JExvYW5fU3RhdHVzLCBwPTAuOCwgbGlzdD1GQUxTRSkNCiNwcmludCh0cmFpbkluZGV4KQ0KZWxpZ2liaWxpdHkudHJhaW4uZHQgPC0gZWxpZ2liaWxpdHkuZHRbdHJhaW5JbmRleCxdDQplbGlnaWJpbGl0eS50ZXN0LmR0IDwtIGVsaWdpYmlsaXR5LmR0Wy10cmFpbkluZGV4LF0NCmBgYA0KDQojI0Ryb3AgTG9hbl9JRA0KYGBge3J9DQplbGlnaWJpbGl0eS50cmFpbi5kdFssTG9hbl9JRDo9TlVMTF0NCmBgYA0KDQojI0ltcGxlbWVudGF0aW9uIG9mIENBUlQgY2xhc3NpZmljYXRpb24gb2YgbG9hbiBlbGlnaWJpbGl0eSArIElkZW50aWZ5IG9wdGltYWwgdHJlZQ0KYGBge3J9DQpzZXQuc2VlZCgxMDAwKQ0KbW9kZWwgPC0gcnBhcnQoTG9hbl9TdGF0dXMgfi4sIGRhdGEgPSBlbGlnaWJpbGl0eS50cmFpbi5kdCxtZXRob2QgPSAnY2xhc3MnLGNvbnRyb2wgPSBycGFydC5jb250cm9sKG1pbnNwbGl0ID0yLGNwPTApKQ0KYGBgDQoNCmBgYHtyfQ0KcnBhcnQucGxvdChtb2RlbCxubj1ULG1haW49Ik1heGltYWwgVHJlZSIpDQojcHJpbnQobW9kZWwpDQpwcmludGNwKG1vZGVsKQ0KYGBgDQoNCmBgYHtyfQ0KcGxvdGNwKG1vZGVsLGx0eT0yLGNvbD00LCBtYWluPSJTdWJ0cmVlcyBpbiBNb2RlbCAxIikNCmBgYA0KYGBge3J9DQojcHJpbnQobW9kZWwkY3B0YWJsZSkNCiNwcmludChtb2RlbCkNCnhlcnJvcl9taW4gPC0gbWluKG1vZGVsJGNwdGFibGVbLDRdKQ0KY3BfbWluX2luZGV4IDwtIG1hdGNoKHhlcnJvcl9taW4sbW9kZWwkY3B0YWJsZVssNF0pDQpjcDEgPC0gbW9kZWwkY3B0YWJsZVtjcF9taW5faW5kZXgsMV0gI0Nob29zZSBjcCBic2FlZCBvbiB3aGljaGV2ZXIgeGVycm9yIGlzIGxvd2VzdA0KcHJpbnQoY3AxKQ0KbTIgPC0gcHJ1bmUobW9kZWwsY3A9Y3AxKQ0KcnBhcnQucGxvdChtMixubj1ULG1haW49IlBydW5lZCBUcmVlIHdpdGggY3AgbWluaW11bSIpDQpgYGANCg0KYGBge3J9DQpjYXJ0LnByZWRpY3QgPC0gZGF0YS50YWJsZShwcmVkaWN0KG0yLGVsaWdpYmlsaXR5LnRlc3QuZHQsIHR5cGUgPSAiY2xhc3MiKSkNCnJlc3VsdHMgPC0gZGF0YS50YWJsZSh0ZXN0ID0gZWxpZ2liaWxpdHkudGVzdC5kdCRMb2FuX1N0YXR1cyxwcmVkaWN0PWNhcnQucHJlZGljdCRWMSkNCiNwcmludChyZXN1bHRzKQ0KYGBgDQoNCiMjQ29uZnVzaW9uIE1hdHJpeCB0byB2aXN1YWxpc2UgYWNjdXJhY3kNCmBgYHtyfQ0KY2FydC5wcmVkaWN0JHByZWQgPC0gbmFtZXMoY2FydC5wcmVkaWN0KVttYXguY29sKGNhcnQucHJlZGljdCldDQojc3VtbWFyeShlbGlnaWJpbGl0eS50ZXN0LmR0JExvYW5fU3RhdHVzKQ0KbSA8LSBjb25mdXNpb25fbWF0cml4KHRhcmdldHMgPSByZXN1bHRzJHRlc3QsIHByZWRpY3Rpb25zID0gcmVzdWx0cyRwcmVkaWN0KQ0KcGxvdF9jb25mdXNpb25fbWF0cml4KG0kYENvbmZ1c2lvbiBNYXRyaXhgW1sxXV0scGFsZXR0ZT0iT3JhbmdlcyIpDQpgYGANCiMjRXZhbHVhdGUgTW9kZWwgUGVyZm9ybWFuY2UNCmBgYHtyfQ0KeHRhYiA8LSB0YWJsZShyZXN1bHRzJHByZWRpY3QscmVzdWx0cyR0ZXN0KQ0KY29uZnVzaW9uTWF0cml4KHh0YWIpDQpgYGANCiMjIEV4cGVyaW1lbnQgd2l0aCBob3cgbW9kZWwgY2xhc3NpZmllcyBhIHNwb29mZWQgZGF0YSBwb2ludA0KYGBge3J9DQojc3VtbWFyeShlbGlnaWJpbGl0eS50cmFpbi5kdCkNCmN1c3RvbWVyLjEgPC0gZGF0YS50YWJsZShHZW5kZXI9YygiTWFsZSIpLE1hcnJpZWQ9YygiWWVzIiksRGVwZW5kZW50cz1jKCIwIiksDQogICAgICAgICAgICAgICAgICAgICAgIEVkdWNhdGlvbj1jKCJHcmFkdWF0ZSIpLFNlbGZfRW1wbG95ZWQ9YygiTm8iKSwNCiAgICAgICAgICAgICAgICAgICAgICAgQXBwbGljYW50SW5jb21lPWMoNTAwNSksQ29hcHBsaWNhbnRJbmNvbWU9YygxOTYwKSwNCiAgICAgICAgICAgICAgICAgICAgICAgTG9hbkFtb3VudD1jKDE0NiksTG9hbl9BbW91bnRfVGVybT1jKDM0My40KSwNCiAgICAgICAgICAgICAgICAgICAgICAgQ3JlZGl0X0hpc3Rvcnk9YygiMSIpLFByb3BlcnR5X0FyZWE9YygiVXJiYW4iKSwNCiAgICAgICAgICAgICAgICAgICAgICAgTG9hbl9TdGF0dXM9YygiWSIpLEluY29tZT1jKDY4OTQpLA0KICAgICAgICAgICAgICAgICAgICAgICBMb2FuTW9udGhseSA9IGMoMTMuOTQyKSkNCmFwcGx5Lm1vZGVsIDwtIHByZWRpY3QobTIsbmV3ZGF0YT1jdXN0b21lci4xLHR5cGU9ImNsYXNzIikNCm91dHB1dCA8LSBkYXRhLnRhYmxlKGN1c3RvbWVyLjEsYXBwbHkubW9kZWwpDQpwcmludChvdXRwdXQpDQpgYGANCg0KIyNJbXBsZW1lbnQgTG9nIFJlZyB0byBjb21wYXJlIGFnYWluc3QgQ0FSVCBwZXJmb3JtYW5jZQ0KYGBge3J9DQoNCmBgYA0KDQoNCg==</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIkhvbWUgTG9hbiBFbGlnaWJpbGl0eSBDbGFzc2lmaWNhdGlvbiBieSBJc2FhYyINCm91dHB1dDogaHRtbF9ub3RlYm9vaw0KLS0tDQoNCmBgYHtyfQ0KbGlicmFyeShkYXRhLnRhYmxlKQ0KbGlicmFyeShnZ3Bsb3QyKQ0KbGlicmFyeShjb3JycGxvdCkNCmxpYnJhcnkoRE13UjIpDQpsaWJyYXJ5KGNhcmV0KQ0KbGlicmFyeShjYVRvb2xzKQ0KbGlicmFyeShycGFydCkNCmxpYnJhcnkocnBhcnQucGxvdCkNCmxpYnJhcnkoY3ZtcykgDQpsaWJyYXJ5KHRpYmJsZSkgIyBmb3IgZXZhbHVhdGlvbiBvZiBjb25mdXN0aW9uIG1hdHJpeA0KbGlicmFyeShlMTA3MSkNCmBgYA0KYGBge3J9DQplbGlnaWJpbGl0eS5kdCA8LSBmcmVhZCgiaG9tZV9lbGlnaWJpbGl0eV9wcmVkaWN0aW9uLmNzdiIpDQpjYXN0ZmFjdG9yIDwtIGMoJ0dlbmRlcicsJ01hcnJpZWQnLCdEZXBlbmRlbnRzJywnRWR1Y2F0aW9uJywnU2VsZl9FbXBsb3llZCcsJ1Byb3BlcnR5X0FyZWEnLCdMb2FuX1N0YXR1cycsJ0NyZWRpdF9IaXN0b3J5JykNCmVsaWdpYmlsaXR5LmR0WyxjYXN0ZmFjdG9yXTwtbGFwcGx5KGVsaWdpYmlsaXR5LmR0WyxjYXN0ZmFjdG9yLHdpdGg9RkFMU0VdLGZhY3RvcikNCnN1bW1hcnkoZWxpZ2liaWxpdHkuZHQpDQpgYGANCmBgYHtyfQ0KdHJhaW5JbmRleCA8LSBjcmVhdGVEYXRhUGFydGl0aW9uKGVsaWdpYmlsaXR5LmR0JExvYW5fU3RhdHVzLCBwPTAuOCwgbGlzdD1GQUxTRSkNCiNwcmludCh0cmFpbkluZGV4KQ0KZWxpZ2liaWxpdHkudHJhaW4uZHQgPC0gZWxpZ2liaWxpdHkuZHRbdHJhaW5JbmRleCxdDQplbGlnaWJpbGl0eS50ZXN0LmR0IDwtIGVsaWdpYmlsaXR5LmR0Wy10cmFpbkluZGV4LF0NCmBgYA0KDQojI0Ryb3AgTG9hbl9JRA0KYGBge3J9DQplbGlnaWJpbGl0eS50cmFpbi5kdFssTG9hbl9JRDo9TlVMTF0NCmBgYA0KDQojI0ltcGxlbWVudGF0aW9uIG9mIENBUlQgY2xhc3NpZmljYXRpb24gb2YgbG9hbiBlbGlnaWJpbGl0eSArIElkZW50aWZ5IG9wdGltYWwgdHJlZQ0KYGBge3J9DQpzZXQuc2VlZCgxMDAwKQ0KbW9kZWwgPC0gcnBhcnQoTG9hbl9TdGF0dXMgfi4sIGRhdGEgPSBlbGlnaWJpbGl0eS50cmFpbi5kdCxtZXRob2QgPSAnY2xhc3MnLGNvbnRyb2wgPSBycGFydC5jb250cm9sKG1pbnNwbGl0ID0yLGNwPTApKQ0KYGBgDQoNCmBgYHtyfQ0KcnBhcnQucGxvdChtb2RlbCxubj1ULG1haW49Ik1heGltYWwgVHJlZSIpDQojcHJpbnQobW9kZWwpDQpwcmludGNwKG1vZGVsKQ0KYGBgDQoNCmBgYHtyfQ0KcGxvdGNwKG1vZGVsLGx0eT0yLGNvbD00LCBtYWluPSJTdWJ0cmVlcyBpbiBNb2RlbCAxIikNCmBgYA0KYGBge3J9DQojcHJpbnQobW9kZWwkY3B0YWJsZSkNCiNwcmludChtb2RlbCkNCnhlcnJvcl9taW4gPC0gbWluKG1vZGVsJGNwdGFibGVbLDRdKQ0KY3BfbWluX2luZGV4IDwtIG1hdGNoKHhlcnJvcl9taW4sbW9kZWwkY3B0YWJsZVssNF0pDQpjcDEgPC0gbW9kZWwkY3B0YWJsZVtjcF9taW5faW5kZXgsMV0gI0Nob29zZSBjcCBic2FlZCBvbiB3aGljaGV2ZXIgeGVycm9yIGlzIGxvd2VzdA0KcHJpbnQoY3AxKQ0KbTIgPC0gcHJ1bmUobW9kZWwsY3A9Y3AxKQ0KcnBhcnQucGxvdChtMixubj1ULG1haW49IlBydW5lZCBUcmVlIHdpdGggY3AgbWluaW11bSIpDQpgYGANCg0KYGBge3J9DQpjYXJ0LnByZWRpY3QgPC0gZGF0YS50YWJsZShwcmVkaWN0KG0yLGVsaWdpYmlsaXR5LnRlc3QuZHQsIHR5cGUgPSAiY2xhc3MiKSkNCnJlc3VsdHMgPC0gZGF0YS50YWJsZSh0ZXN0ID0gZWxpZ2liaWxpdHkudGVzdC5kdCRMb2FuX1N0YXR1cyxwcmVkaWN0PWNhcnQucHJlZGljdCRWMSkNCiNwcmludChyZXN1bHRzKQ0KYGBgDQoNCiMjQ29uZnVzaW9uIE1hdHJpeCB0byB2aXN1YWxpc2UgYWNjdXJhY3kNCmBgYHtyfQ0KY2FydC5wcmVkaWN0JHByZWQgPC0gbmFtZXMoY2FydC5wcmVkaWN0KVttYXguY29sKGNhcnQucHJlZGljdCldDQojc3VtbWFyeShlbGlnaWJpbGl0eS50ZXN0LmR0JExvYW5fU3RhdHVzKQ0KbSA8LSBjb25mdXNpb25fbWF0cml4KHRhcmdldHMgPSByZXN1bHRzJHRlc3QsIHByZWRpY3Rpb25zID0gcmVzdWx0cyRwcmVkaWN0KQ0KcGxvdF9jb25mdXNpb25fbWF0cml4KG0kYENvbmZ1c2lvbiBNYXRyaXhgW1sxXV0scGFsZXR0ZT0iT3JhbmdlcyIpDQpgYGANCiMjRXZhbHVhdGUgTW9kZWwgUGVyZm9ybWFuY2UNCmBgYHtyfQ0KeHRhYiA8LSB0YWJsZShyZXN1bHRzJHByZWRpY3QscmVzdWx0cyR0ZXN0KQ0KY29uZnVzaW9uTWF0cml4KHh0YWIpDQpgYGANCiMjIEV4cGVyaW1lbnQgd2l0aCBob3cgbW9kZWwgY2xhc3NpZmllcyBhIHNwb29mZWQgZGF0YSBwb2ludA0KYGBge3J9DQojc3VtbWFyeShlbGlnaWJpbGl0eS50cmFpbi5kdCkNCmN1c3RvbWVyLjEgPC0gZGF0YS50YWJsZShHZW5kZXI9YygiTWFsZSIpLE1hcnJpZWQ9YygiWWVzIiksRGVwZW5kZW50cz1jKCIwIiksDQogICAgICAgICAgICAgICAgICAgICAgIEVkdWNhdGlvbj1jKCJHcmFkdWF0ZSIpLFNlbGZfRW1wbG95ZWQ9YygiTm8iKSwNCiAgICAgICAgICAgICAgICAgICAgICAgQXBwbGljYW50SW5jb21lPWMoNTAwNSksQ29hcHBsaWNhbnRJbmNvbWU9YygxOTYwKSwNCiAgICAgICAgICAgICAgICAgICAgICAgTG9hbkFtb3VudD1jKDE0NiksTG9hbl9BbW91bnRfVGVybT1jKDM0My40KSwNCiAgICAgICAgICAgICAgICAgICAgICAgQ3JlZGl0X0hpc3Rvcnk9YygiMSIpLFByb3BlcnR5X0FyZWE9YygiVXJiYW4iKSwNCiAgICAgICAgICAgICAgICAgICAgICAgTG9hbl9TdGF0dXM9YygiWSIpLEluY29tZT1jKDY4OTQpLA0KICAgICAgICAgICAgICAgICAgICAgICBMb2FuTW9udGhseSA9IGMoMTMuOTQyKSkNCmFwcGx5Lm1vZGVsIDwtIHByZWRpY3QobTIsbmV3ZGF0YT1jdXN0b21lci4xLHR5cGU9ImNsYXNzIikNCm91dHB1dCA8LSBkYXRhLnRhYmxlKGN1c3RvbWVyLjEsYXBwbHkubW9kZWwpDQpwcmludChvdXRwdXQpDQpgYGANCiMjQmluIGNvbnRpbnVvdXMgdmFyaWFibGVzIA0KYGBge3J9DQojIGNyZWF0ZSAzIGludGVydmFscw0KbG9hbm1vbnRobHkuY3V0b2ZmcyA8LSBjKDAsIDkuNSwgMTIuNSwgMTAwKQ0KZWxpZ2liaWxpdHkudHJhaW4uZHRbLCBsb2FubW9udGhseS5icmFja2V0IDo9IGN1dChMb2FuTW9udGhseSwgYnJlYWtzID0gbG9hbm1vbnRobHkuY3V0b2ZmcywgaW5jbHVkZS5sb3dlc3QgPSBUUlVFKV0NCg0KIyBkcm9wIGNvbHVtbnMNCmVsaWdpYmlsaXR5LnRyYWluLmR0WyxjKCJHZW5kZXIiLCJDb2FwcGxpY2FudEluY29tZSIsICJBcHBsaWNhbnRJbmNvbWUiLCAiTG9hbl9BbW91bnRfVGVybSIsICJMb2FuTW9udGhseSIpOj1OVUxMXQ0Kc3VtbWFyeShlbGlnaWJpbGl0eS50cmFpbi5kdCkNCmBgYA0KDQoNCiMjSW1wbGVtZW50IExvZyBSZWcgdG8gY29tcGFyZSBhZ2FpbnN0IENBUlQgcGVyZm9ybWFuY2UNCmBgYHtyfQ0KZWxpZ2liaWxpdHkubTMgPC0gZ2xtKExvYW5fU3RhdHVzIH4gLiwgZmFtaWx5ID0gYmlub21pYWwsIGRhdGEgPSBlbGlnaWJpbGl0eS50cmFpbi5kdCkNCnN1bW1hcnkoZWxpZ2liaWxpdHkubTMpDQpgYGANCmBgYHtyfQ0KT1IubTMgPC0gZXhwKGNvZWYoZWxpZ2liaWxpdHkubTMpKQ0KT1IubTMNCg0KT1IuQ0kubTMgPC0gZXhwKGNvbmZpbnQoZWxpZ2liaWxpdHkubTMpKQ0KT1IuQ0kubTMNCg0KcHJvYiA8LSBwcmVkaWN0KGVsaWdpYmlsaXR5Lm0zLCB0eXBlID0gJ3Jlc3BvbnNlJykNCg0KcGxvdCh4PWVsaWdpYmlsaXR5LnRlc3QuZHQkTG9hbl9TdGF0dXMseT1wcm9iLHR5cGU9IjEiLG1haW49J0xvZyBSZWcgUHJvYiBvZiBCZWluZyBFbGlnaWJsZSBmb3IgTG9hbicpDQoNCmBgYA0KDQoNCg==</div>
 
 
 
