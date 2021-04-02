@@ -5,7 +5,7 @@ library(caret)
 library(MLmetrics)
 
 set.seed(2014)
-setwd('/Users/stephen/Desktop/REP Acad/RE6013 Biz Ana/Project WhiteRock/VehicleLoan')
+setwd('~/Documents/re6013bizanalytics/vehicle')
 VehicleLoan.dt <- fread('VehicleLoan_cleaned.csv')
 
 # Data cleaning ----------------------------------------------------------
@@ -60,3 +60,7 @@ predicted.amount <- cart2 %>%
   predict(test.data)
 RMSE(predicted.amount, test.data$disbursed_amount) # RMSE
 R2_Score(predicted.amount, test.data$disbursed_amount) #R2
+predicted.amount
+
+# SAVE
+saveRDS(cart2, "./vehicle_amount_CART.rds")

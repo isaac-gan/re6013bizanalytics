@@ -98,4 +98,7 @@ print(output)
 
 ```
 
-
+## Save Model
+```{r}
+saveRDS(m2, "./home_eligibility_CART.rds")
+```
