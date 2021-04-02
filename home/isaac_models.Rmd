@@ -25,13 +25,11 @@ summary(eligibility.dt)
 ```{r}
 trainIndex <- createDataPartition(eligibility.dt$Loan_Status, p=0.8, list=FALSE)
 #print(trainIndex)
+eligibility.dt[,Loan_ID:=NULL]
+eligibility.dt[,ApplicantIncome:=NULL]
+eligibility.dt[,CoapplicantIncome:=NULL]
 eligibility.train.dt <- eligibility.dt[trainIndex,]
 eligibility.test.dt <- eligibility.dt[-trainIndex,]
-```
-
-##Drop Loan_ID
-```{r}
-eligibility.train.dt[,Loan_ID:=NULL]
 ```
 
 ##Implementation of CART classification of loan eligibility + Identify optimal tree
@@ -49,6 +47,7 @@ printcp(model)
 ```{r}
 plotcp(model,lty=2,col=4, main="Subtrees in Model 1")
 ```
+##Choose cp value based on the minimal xerror 
 ```{r}
 #print(model$cptable)
 #print(model)
@@ -91,35 +90,6 @@ customer.1 <- data.table(Gender=c("Male"),Married=c("Yes"),Dependents=c("0"),
 apply.model <- predict(m2,newdata=customer.1,type="class")
 output <- data.table(customer.1,apply.model)
 print(output)
-```
-##Bin continuous variables 
-```{r}
-# create 3 intervals
-loanmonthly.cutoffs <- c(0, 9.5, 12.5, 100)
-eligibility.train.dt[, loanmonthly.bracket := cut(LoanMonthly, breaks = loanmonthly.cutoffs, include.lowest = TRUE)]
-
-# drop columns
-eligibility.train.dt[,c("Gender","CoapplicantIncome", "ApplicantIncome", "Loan_Amount_Term", "LoanMonthly"):=NULL]
-summary(eligibility.train.dt)
-```
-
-
-##Implement Log Reg to compare against CART performance
-```{r}
-eligibility.m3 <- glm(Loan_Status ~ ., family = binomial, data = eligibility.train.dt)
-summary(eligibility.m3)
-```
-```{r}
-OR.m3 <- exp(coef(eligibility.m3))
-OR.m3
-
-OR.CI.m3 <- exp(confint(eligibility.m3))
-OR.CI.m3
-
-prob <- predict(eligibility.m3, type = 'response')
-
-plot(x=eligibility.test.dt$Loan_Status,y=prob,type="1",main='Log Reg Prob of Being Eligible for Loan')
-
 ```
 
 ## Save Model
