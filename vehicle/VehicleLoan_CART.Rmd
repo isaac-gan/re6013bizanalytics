@@ -18,6 +18,8 @@ library(magrittr)
 set.seed(2014)
 setwd('~/Desktop/REP Acad/RE6013 Biz Ana/Project WhiteRock/re6013bizanalytics/vehicle')
 VehicleLoan.dt <- fread('VehicleLoan_cleaned.csv')
+VehicleLoan.dt$DisbursalMonth <- factor(VehicleLoan.dt$DisbursalMonth)
+VehicleLoan.dt$employment <- factor(VehicleLoan.dt$employment)
 head(VehicleLoan.dt)
 ```
 # Data cleaning
