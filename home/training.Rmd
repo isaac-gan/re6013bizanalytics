@@ -114,6 +114,7 @@ mean(home.processed$LoanMonthly)
 
 # Data-Preprocessing for Categorical Classifier
 
+## loanmonthly bracket
 we need to put continuous labels into bins to convert to classification problem
 ```{r}
 #see distribution of label (LoanMonthly) to decide bins
@@ -135,6 +136,23 @@ home.processed2[, loanmonthly.bracket := cut(LoanMonthly, breaks = loanmonthly.c
 home.processed2[,c("Loan_ID","Gender","CoapplicantIncome", "ApplicantIncome", "Loan_Amount_Term", "LoanAmount", "Loan_Status", "LoanMonthly"):=NULL]
 summary(home.processed2)
 ```
+##loan amount bracket
+```{r}
+ggplot(home.loan.no.outlier, aes(LoanAmount)) + geom_histogram(binwidth = 5)
+summary(home.loan.no.outlier$LoanAMount)
+```
+```{r}
+home.processed2.1 <- copy(home.loan.no.outlier)
+
+# create 3 intervals
+loanamount.cutoffs <- c(0, 9.5, 12.5, 100)
+home.processed2.1[, loanamount.bracket := cut(LoanAmount, breaks = loanamount.cutoffs, include.lowest = TRUE)]
+
+# drop columns
+home.processed2.1[,c("Loan_ID","Gender","CoapplicantIncome", "ApplicantIncome", "Loan_Amount_Term", "LoanAmount", "Loan_Status", "LoanMonthly"):=NULL]
+summary(home.processed2.1)
+```
+
 # Categorical CART
 
 ## grow to max
@@ -190,7 +208,7 @@ plot_confusion_matrix(m$`Confusion Matrix`[[1]])
 drop unnecessary columns
 ```{r}
 home.processed3 <- copy(home.loan.no.outlier)
-home.processed3[,c("Loan_ID", "Loan_Amount_Term", "LoanMonthly"):=NULL]
+home.processed3[,c("Loan_ID", "Loan_Amount_Term", "LoanMonthly", "Income"):=NULL]
 ```
 
 ## grow to max

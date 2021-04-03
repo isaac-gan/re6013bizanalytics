@@ -234,7 +234,7 @@ ggplot(home.loan, aes(x=Income, y=LoanMonthly)) + geom_point()
 Find correlations without outlier
 - much stronger and better
 ```{r}
-corr.matrix <- cor(home.loan[LoanMonthly<250,c('Income', 'LoanMonthly')], use='complete.obs')
+corr.matrix <- cor(home.loan[LoanMonthly<250,c('Income', 'LoanMonthly', 'LoanAmount', 'ApplicantIncome')], use='complete.obs')
 corrplot(corr.matrix, method="color",addCoef.col = "black",tl.col = "black")
 ggplot(home.loan[LoanMonthly<250], aes(x=Income, y=LoanMonthly)) + geom_point()
 ```
