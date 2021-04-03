@@ -208,7 +208,9 @@ plot_confusion_matrix(m$`Confusion Matrix`[[1]])
 drop unnecessary columns
 ```{r}
 home.processed3 <- copy(home.loan.no.outlier)
-home.processed3[,c("Loan_ID", "Loan_Amount_Term", "LoanMonthly"):=NULL]
+home.processed3[,c("Loan_ID", "Loan_Amount_Term", "LoanMonthly", "Loan_Status"):=NULL]
+
+summary(home.processed3)
 ```
 
 ## grow to max
