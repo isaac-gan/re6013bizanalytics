@@ -254,3 +254,6 @@ data.frame(R2=R2(tree.cont.m1.pruned.pred, home.cont.cart.test$LoanAmount), RMSE
 
 mean(home.cont.cart.test$LoanAmount)
 ```
+```{r}
+saveRDS(tree.cont.m1.pruned.pred, "./home_amount_CART_continuous.rds")
+```
