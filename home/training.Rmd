@@ -208,7 +208,7 @@ plot_confusion_matrix(m$`Confusion Matrix`[[1]])
 drop unnecessary columns
 ```{r}
 home.processed3 <- copy(home.loan.no.outlier)
-home.processed3[,c("Loan_ID", "Loan_Amount_Term", "LoanMonthly", "Income"):=NULL]
+home.processed3[,c("Loan_ID", "Loan_Amount_Term", "LoanMonthly"):=NULL]
 ```
 
 ## grow to max
@@ -248,12 +248,12 @@ tree.cont.m1.pruned <- prune(tree.cont.m1, cp = cp2)
 printcp(tree.cont.m1.pruned, digits = 3)
 ```
 ```{r}
-tree.cont.m1.pruned.pred <- predict(tree.cont.m1, home.cont.cart.test)
+tree.cont.m1.pruned.pred <- predict(tree.cont.m1.pruned, home.cont.cart.test)
 
 data.frame(R2=R2(tree.cont.m1.pruned.pred, home.cont.cart.test$LoanAmount), RMSE=RMSE(tree.cont.m1.pruned.pred, home.cont.cart.test$LoanAmount), MAE=MAE(tree.cont.m1.pruned.pred, home.cont.cart.test$LoanAmount))
 
 mean(home.cont.cart.test$LoanAmount)
 ```
 ```{r}
-saveRDS(tree.cont.m1.pruned.pred, "./home_amount_CART_continuous.rds")
+saveRDS(tree.cont.m1.pruned, "./home_amount_CART_continuous.rds")
 ```
