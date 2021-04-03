@@ -181,6 +181,57 @@ plot_confusion_matrix(m$`Confusion Matrix`[[1]])
 
 ## Save
 ```{r}
-saveRDS(tree.cat.m1.pruned, "./home_amount_CART.rds")
+# saveRDS(tree.cat.m1.pruned, "./home_amount_CART.rds")
+```
 
+# Continuous CART
+
+drop unnecessary columns
+```{r}
+home.processed3 <- copy(home.loan.no.outlier)
+home.processed3[,c("Loan_ID", "Loan_Amount_Term", "LoanAmount"):=NULL]
+```
+
+## grow to max
+```{r}
+set.seed(6013)
+
+home.cont.cart <- createDataPartition(home.processed3$LoanMonthly, p=0.8, list=FALSE)
+home.cont.cart.train <- home.processed3[home.cont.cart,]
+home.cont.cart.test <- home.processed3[-home.cont.cart,]
+
+tree.cont.m1 <- rpart(LoanMonthly ~ ., data = home.cont.cart.train, method = "anova", control = rpart.control(minsplit = 10, cp = 0))
+
+# hard to actually view tree
+# rpart.plot(tree.cat.m1, nn=TRUE, main="Maximal Tree for categorical Loan Monthly")
+
+# view important variables
+tree.cont.m1$variable.importance
+
+# view print instead
+printcp(tree.cont.m1)
+```
+```{r}
+plotcp(tree.cont.m1)
+```
+## prune tree
+```{r}
+CVerror.cap <-
+  tree.cont.m1$cptable[which.min(tree.cont.m1$cptable[, "xerror"]), "xerror"] + tree.cont.m1$cptable[which.min(tree.cont.m1$cptable[, "xerror"]), "xstd"]
+i <- 1
+j <- 4
+while (tree.cont.m1$cptable[i, j] > CVerror.cap) {
+  i <- i + 1
+}
+cp2 = ifelse(i > 1, sqrt(tree.cont.m1$cptable[i, 1] * tree.cont.m1$cptable[i - 1, 1]), 1)
+# Prune
+tree.cont.m1.pruned <- prune(tree.cont.m1, cp = cp2)
+printcp(tree.cont.m1.pruned, digits = 3)
+```
+```{r}
+tree.cont.m1.pruned.pred <- predict(tree.cont.m1, home.cont.cart.test)
+
+data.frame(R2=R2(tree.cont.m1.pruned.pred, home.cont.cart.test$LoanMonthly), RMSE=RMSE(tree.cont.m1.pruned.pred, home.cont.cart.test$LoanMonthly), MAE=MAE(tree.cont.m1.pruned.pred, home.cont.cart.test$LoanMonthly))
+
+mean(home.cont.cart.test$LoanMonthly)
 ```

@@ -171,7 +171,7 @@ la.iqr <- IQR(home[!is.na(LoanAmount)]$LoanAmount)
 ggplot(home[ApplicantIncome > ai.q[1]-1.5*ai.iqr & ApplicantIncome < ai.q[2]+1.5*ai.iqr], aes(ApplicantIncome)) + geom_histogram(binwidth = 50)
 ggplot(home[CoapplicantIncome > cai.q[1]-1.5*cai.iqr & CoapplicantIncome <= cai.q[2]+1.5*cai.iqr], aes(CoapplicantIncome)) + geom_histogram(binwidth = 50)
 ggplot(home[!is.na(LoanAmount) & LoanAmount > la.q[1]-1.5*la.iqr & LoanAmount < la.q[2]-1.5*la.iqr], aes(LoanAmount)) + geom_histogram(binwidth = 1)
-ggplot(home[!is.na(Loan_Amount_Term) & Loan_Amount_Term != 360], aes(Loan_Amount_Term)) + geom_histogram(binwidth = 10)
+ggplot(home[!is.na(Loan_Amount_Term)], aes(Loan_Amount_Term)) + geom_histogram(binwidth = 10)
 ```
 Since there is large amount of people with 0 Coapplicant, see distribution of non-zero, barring outliers
 ```{r}
@@ -234,7 +234,7 @@ ggplot(home.loan, aes(x=Income, y=LoanMonthly)) + geom_point()
 Find correlations without outlier
 - much stronger and better
 ```{r}
-corr.matrix <- cor(home.loan[LoanMonthly<250,c('Income', 'LoanMonthly', 'LoanAmount', 'Loan_Amount_Term')], use='complete.obs')
+corr.matrix <- cor(home.loan[LoanMonthly<250,c('Income', 'LoanMonthly')], use='complete.obs')
 corrplot(corr.matrix, method="color",addCoef.col = "black",tl.col = "black")
 ggplot(home.loan[LoanMonthly<250], aes(x=Income, y=LoanMonthly)) + geom_point()
 ```
