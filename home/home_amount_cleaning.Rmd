@@ -1,6 +1,5 @@
 ---
 title: "RE6013 Business Analytics EDA and Cleaning"
-output: html_notebook
 ---
 
 # Loading Data and Imports

@@ -1,6 +1,5 @@
 ---
 title: "Home Loan Eligibility Classification by Isaac"
-output: html_notebook
 ---
 
 ```{r}

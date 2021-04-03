@@ -1,6 +1,5 @@
 ---
 title: "RE6013 Business Analytics Training"
-output: html_notebook
 ---
 
 ```{r}
