@@ -33,8 +33,6 @@ CUSTOMER.defaulted_loans_6months <- 0
 CUSTOMER.avrg_loan_tenure <- 1
 CUSTOMER.credit_history <- 0
 CUSTOMER.age <- 40
-
-# Customer Data HOME
 CUSTOMER.gender <- "Female"
 CUSTOMER.married <- "Yes"
 CUSTOMER.dependents <- "0"
@@ -43,7 +41,6 @@ CUSTOMER.income <- 20000
 CUSTOMER.co_applicant_income <- 20000
 CUSTOMER.loan_term <- 146
 CUSTOMER.Property_Area <- "Urban"
-CUSTOMER.income <- 1000
 
 # Models
 model.vehicle.eligibility <- readRDS("./vehicle/vehicle_eligibility_LOGREG.rds")
@@ -113,8 +110,9 @@ result.home.eligibility <- ifelse(prob.home.eligibility == "N", 0, 1)
 
 print(paste(CUSTOMER.name , "Loan Eligibility Results"))
 print(paste("=== FOR VEHICLE ==="))
-print(paste("Eligibility:", ifelse(result.vehicle.eligibility == 0, "No", "Yes") ))
-print(paste("Loan Amount (if Eligible):", result.vehicle.amount))
+print(paste("Loan Amount:", result.vehicle.amount))
+print(paste("Low Default Possibility?:", ifelse(result.vehicle.eligibility == 0, "No", "Yes") ))
+
 print(paste("=== FOR HOME ==="))
-print(paste("Eligibility:", ifelse(result.home.eligibility== 0, "No", "Yes") ))
-print(paste("Loan Amount (if Eligible):", result.home.amount * 1000))
+print(paste("Loan Amount:", result.home.amount * 1000))
+print(paste("Low Default Possibility?:", ifelse(result.home.eligibility== 0, "No", "Yes") ))
