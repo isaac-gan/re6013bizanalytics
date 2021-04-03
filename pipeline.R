@@ -101,8 +101,7 @@ data.home = data.table(
            Credit_History= toString(CUSTOMER.credit_history %/% 150),
            Property_Area=CUSTOMER.Property_Area,
            ApplicantIncome=CUSTOMER.income,
-          Income = CUSTOMER.income + CUSTOMER.co_applicant_income,
-            Loan_Status = "Y")
+          Income = CUSTOMER.income + CUSTOMER.co_applicant_income)
 
 # home predictions
 result.home.amount <- predict(model.home.amount, newdata=data.home)
@@ -118,4 +117,4 @@ print(paste("Eligibility:", ifelse(result.vehicle.eligibility == 0, "No", "Yes")
 print(paste("Loan Amount (if Eligible):", result.vehicle.amount))
 print(paste("=== FOR HOME ==="))
 print(paste("Eligibility:", ifelse(result.home.eligibility== 0, "No", "Yes") ))
-print(paste("Loan Amount (if Eligible):", result.home.amount * (CUSTOMER.loan_term %/% 30)))
+print(paste("Loan Amount (if Eligible):", result.home.amount * 1000))
