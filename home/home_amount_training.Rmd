@@ -1,5 +1,6 @@
 ---
 title: "RE6013 Business Analytics Training"
+output: html_notebook
 ---
 
 ```{r}
@@ -182,11 +183,13 @@ plotcp(tree.cat.m1) # we can see an optimal xerror @ approx CP=0.0318182 with xe
 ```{r}
 # choose cp ~ 0.031 since it is the simplest tree given the CV error cap (xerror + xstd)
 cp1 <- 0.031
-tree.cat.m1.pruned <- prune(tree.cat.m1, cp = cp1)
+cp1.visual <- 0.004
+cp.to.use <- cp1
+tree.cat.m1.pruned <- prune(tree.cat.m1, cp = cp.to.use)
 
 printcp(tree.cat.m1.pruned)
 
-rpart.plot(tree.cat.m1.pruned, nn=TRUE, main = paste(c("Pruned tree with cp =", cp1), collapse = " "))
+rpart.plot(tree.cat.m1.pruned, nn=TRUE, main = paste(c("Pruned tree with cp =", cp.to.use), collapse = " "))
 ```
 ## confusion matrix
 ```{r}
@@ -202,7 +205,7 @@ plot_confusion_matrix(m$`Confusion Matrix`[[1]])
 ```
 
 
-# Continuous CART
+# Continuous CART (Loan Amount)
 
 drop unnecessary columns
 ```{r}
@@ -221,9 +224,6 @@ home.cont.cart.train <- home.processed3[home.cont.cart,]
 home.cont.cart.test <- home.processed3[-home.cont.cart,]
 
 tree.cont.m1 <- rpart(LoanAmount ~ ., data = home.cont.cart.train, method = "anova", control = rpart.control(minsplit = 10, cp = 0))
-
-# hard to actually view tree
-# rpart.plot(tree.cat.m1, nn=TRUE, main="Maximal Tree for categorical Loan Monthly")
 
 # view important variables
 tree.cont.m1$variable.importance
@@ -244,8 +244,9 @@ while (tree.cont.m1$cptable[i, j] > CVerror.cap) {
   i <- i + 1
 }
 cp2 = ifelse(i > 1, sqrt(tree.cont.m1$cptable[i, 1] * tree.cont.m1$cptable[i - 1, 1]), 1)
+cp2.visually.obtained = 0.015
 # Prune
-tree.cont.m1.pruned <- prune(tree.cont.m1, cp = cp2)
+tree.cont.m1.pruned <- prune(tree.cont.m1, cp = cp2.visually.obtained)
 printcp(tree.cont.m1.pruned, digits = 3)
 ```
 ```{r}
@@ -254,7 +255,67 @@ tree.cont.m1.pruned.pred <- predict(tree.cont.m1.pruned, home.cont.cart.test)
 data.frame(R2=R2(tree.cont.m1.pruned.pred, home.cont.cart.test$LoanAmount), RMSE=RMSE(tree.cont.m1.pruned.pred, home.cont.cart.test$LoanAmount), MAE=MAE(tree.cont.m1.pruned.pred, home.cont.cart.test$LoanAmount))
 
 mean(home.cont.cart.test$LoanAmount)
+
+rpart.plot(tree.cont.m1.pruned, nn=TRUE)
 ```
 ```{r}
-saveRDS(tree.cont.m1.pruned, "./home_amount_CART_continuous.rds")
+# saveRDS(tree.cont.m1.pruned, "./home_amount_CART_continuous.rds")
+```
+
+# Continuous CART (Loan Monthly)
+
+drop unnecessary columns
+```{r}
+home.processed3 <- copy(home.loan.no.outlier)
+home.processed3[,c("Loan_ID", "Loan_Amount_Term", "LoanAmount", "Loan_Status"):=NULL]
+
+summary(home.processed3)
+```
+
+## grow to max
+```{r}
+set.seed(6013)
+
+home.cont.cart1 <- createDataPartition(home.processed3$LoanMonthly, p=0.8, list=FALSE)
+home.cont.cart1.train <- home.processed3[home.cont.cart1,]
+home.cont.cart1.test <- home.processed3[-home.cont.cart1,]
+
+tree.cont.m2 <- rpart(LoanMonthly ~ ., data = home.cont.cart1.train, method = "anova", control = rpart.control(minsplit = 10, cp = 0))
+
+# hard to actually view tree
+# rpart.plot(tree.cat.m1, nn=TRUE, main="Maximal Tree for categorical Loan Monthly")
+
+# view important variables
+tree.cont.m2$variable.importance
+
+# view print instead
+printcp(tree.cont.m2)
+```
+```{r}
+plotcp(tree.cont.m2)
+```
+## prune tree
+```{r}
+CVerror.cap <-
+  tree.cont.m2$cptable[which.min(tree.cont.m2$cptable[, "xerror"]), "xerror"] + tree.cont.m2$cptable[which.min(tree.cont.m2$cptable[, "xerror"]), "xstd"]
+i <- 1
+j <- 4
+while (tree.cont.m2$cptable[i, j] > CVerror.cap) {
+  i <- i + 1
+}
+cp3 = ifelse(i > 1, sqrt(tree.cont.m2$cptable[i, 1] * tree.cont.m2$cptable[i - 1, 1]), 1)
+cp3.visually.obtained = 0.006# Prune
+tree.cont.m2.pruned <- prune(tree.cont.m2, cp = cp3.visually.obtained)
+printcp(tree.cont.m2.pruned, digits = 3)
+
+
+```
+```{r}
+tree.cont.m2.pruned.pred <- predict(tree.cont.m2.pruned, home.cont.cart1.test)
+
+data.frame(R2=R2(tree.cont.m2.pruned.pred, home.cont.cart1.test$LoanMonthly), RMSE=RMSE(tree.cont.m2.pruned.pred, home.cont.cart1.test$LoanMonthly), MAE=MAE(tree.cont.m2.pruned.pred, home.cont.cart1.test$LoanMonthly))
+
+mean(home.cont.cart1.test$LoanMonthly)
+
+rpart.plot(tree.cont.m2.pruned, nn=TRUE)
 ```
